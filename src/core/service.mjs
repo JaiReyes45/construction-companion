@@ -1,7 +1,8 @@
 import {randomUUID} from 'node:crypto';
 import {scopeKey,fail,validateEvent,exact} from '../contracts.mjs';
 import {createQuestionBroker} from '../questions.mjs';
-export function createService({store,now=Date.now,memoryRoot}){
+import {dispatchRpc} from '../host/rpc.mjs';
+export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'}}){
  const handles=new Map();
  const broker=createQuestionBroker({store,now});broker.recover();
  for(const row of store.scan('session'))if(row.key==='session')handles.set(row.value.sessionKey,row.value.scope);
@@ -13,7 +14,17 @@ export function createService({store,now=Date.now,memoryRoot}){
    const sessionKey=randomUUID();store.compareAndSet(clean,'session',null,{sessionKey,scope:clean,status:'active'});handles.set(sessionKey,clean);return sessionKey;
   },
   resolveSession(key){const s=handles.get(key);if(!s)fail('NOT_FOUND','Unknown session');return s;},
-  ingest(e){validateEvent(e);service.registerSession(e);return store.append(e);},
+  ingest(e){
+   validateEvent(e);service.registerSession(e);const result=store.append(e);
+   if(!result.duplicate&&e.turnId&&['turn.start','turn.end'].includes(e.type)){
+    const old=store.read(e,'active-turn');
+    if(e.type==='turn.start'||old?.value.turnId===e.turnId){
+     store.compareAndSet(e,'active-turn',old?.version??null,{turnId:e.turnId,active:e.type==='turn.start'});
+     const q=broker.get(e);if(q?.status==='open'&&(e.type==='turn.end'||q.turnId!==e.turnId))broker.cancel(q);
+    }
+   }
+   return result;
+  },
   sessions(){return [...handles].map(([sessionKey,s])=>({sessionKey,host:s.host,status:store.read(s,'session').value.status}));},
   events(key,after=0){return store.list(service.resolveSession(key),{after});},
   ask(input,options){service.registerSession(input);return broker.ask(input,options);},
@@ -24,7 +35,13 @@ export function createService({store,now=Date.now,memoryRoot}){
    return broker.reply({...scope,turnId:q.turnId,requestId:q.requestId,...data});
   },
   cancel(origin){broker.cancel(origin);},
-  handleRoute({route,method,data,url}){
+  async handleRoute({route,method,data,url,res}){
+   if(route==='/host/rpc'&&method==='POST'){
+    const controller=new AbortController(),disconnected=()=>{if(!res.writableEnded)controller.abort('disconnected')};
+    res.once('close',disconnected);
+    try{return await dispatchRpc({service,contextSecret,capability,data,signal:controller.signal});}
+    finally{res.off('close',disconnected);}
+   }
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
    if(route==='/api/question/answer'&&method==='POST'){exact(data,['sessionKey','id','version','answer']);const {sessionKey,...reply}=data;return service.answer(sessionKey,reply);}
   },

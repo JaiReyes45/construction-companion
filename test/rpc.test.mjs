@@ -1,0 +1,36 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createService} from '../src/core/service.mjs';
+import {openStore} from '../src/core/store.mjs';
+import {startServer} from '../src/server.mjs';
+import {createHostClient} from '../src/mcp/client.mjs';
+import {signContext} from '../src/host/context.mjs';
+import {scope,event} from './helpers.mjs';
+test('RPC roundtrip resolves exact request, rejects altered context and closed turns',async t=>{
+ const secret=Buffer.alloc(32,9),store=openStore(':memory:');
+ const service=createService({store,contextSecret:secret,capability:{questionMode:'verified-short'}});
+ const server=await startServer({service,tokens:{ingest:'i'.repeat(64),ui:'u'.repeat(64)}});t.after(async()=>{await server.close();service.close()});
+ service.ingest(event({type:'turn.start',turnId:'t',eventId:'start'}));
+ const context=signContext({scope,turnId:'t',expiresAt:Date.now()+60000},secret),client=createHostClient({endpoint:server.origin,token:'i'.repeat(64)});
+ const args={id:'q',text:'Audience?',options:[{id:'a',label:'Customers'}],allowFreeText:false,timeoutMs:45000};
+ await assert.rejects(()=>client.call('ask',args,{context:context+'x',requestId:'r'}),{code:'UNAUTHORIZED'});
+ const pending=client.call('ask',args,{context,requestId:'r'});
+ const key=service.registerSession(scope);
+ for(let i=0;i<50&&!service.question(key);i++)await new Promise(r=>setTimeout(r,5));
+ assert.equal(service.question(key).requestId,'r');
+ service.answer(key,{id:'q',version:1,answer:{optionId:'a'}});
+ assert.equal((await pending).question.requestId,'r');
+ service.ingest(event({type:'turn.end',turnId:'t',eventId:'end',payload:{}}));
+ await assert.rejects(()=>client.call('ask',{...args,id:'next'},{context,requestId:'new'}),{code:'CONFLICT'});
+});
+test('RPC transport disconnect cancels its pending question',async t=>{
+ const secret=Buffer.alloc(32,9),store=openStore(':memory:'),service=createService({store,contextSecret:secret,capability:{questionMode:'verified-short'}});
+ const server=await startServer({service,tokens:{ingest:'i'.repeat(64),ui:'u'.repeat(64)}});t.after(async()=>{await server.close();service.close()});
+ service.ingest(event({type:'turn.start',turnId:'t'}));const context=signContext({scope,turnId:'t',expiresAt:Date.now()+60000},secret),key=service.registerSession(scope);
+ const client=createHostClient({endpoint:server.origin,token:'i'.repeat(64)}),abort=new AbortController();
+ const pending=client.call('ask',{id:'q',text:'Audience?',options:[],allowFreeText:true},{context,requestId:'r',signal:abort.signal});const rejected=assert.rejects(()=>pending);
+ for(let i=0;i<50&&!service.question(key);i++)await new Promise(r=>setTimeout(r,5));
+ abort.abort();await rejected;
+ for(let i=0;i<50&&service.question(key)?.status==='open';i++)await new Promise(r=>setTimeout(r,5));
+ assert.equal(service.question(key).status,'cancelled');
+});

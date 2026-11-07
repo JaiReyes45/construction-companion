@@ -28,7 +28,7 @@ export function createQuestionBroker({store,now=Date.now}){
     return q;
    });
    return new Promise(resolve=>{
-    const onAbort=()=>broker.cancel(q);
+    const onAbort=()=>signal?.reason==='disconnected'?broker.disconnect(q):broker.cancel(q);
     const timer=setTimeout(()=>finish(q,'expired',{status:'fallback',reason:'timeout'}),Math.min(timeoutMs,expiry-now()));
     pending.set(pendingKey(q),{resolve,timer,cleanup:()=>signal?.removeEventListener('abort',onAbort),q});
     signal?.addEventListener('abort',onAbort,{once:true});
