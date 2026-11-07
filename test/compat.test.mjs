@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {mkdtempSync,rmSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {inspectHost,runProbe} from '../src/compat.mjs';
@@ -20,6 +20,6 @@ test('probe uses an isolated home and argument arrays with spaced paths',async t
   const calls=[];
   const r=await runProbe({host:'codex',executable:'codex',fixtureRoot:root,run:async(...args)=>{calls.push(args);return {stdout:'codex-cli 0.155.1'};}});
   assert.equal(r.hostVersion,'0.155.1');
-  assert.ok(calls.every(([,args,opt])=>Array.isArray(args)&&opt.shell===false&&opt.env.CODEX_HOME.startsWith(root)));
+  assert.ok(calls.every(([,args,opt])=>Array.isArray(args)&&opt.shell===false&&realpathSync.native(path.dirname(opt.env.CODEX_HOME))===realpathSync.native(root)));
   assert.ok(calls.every(([,args])=>!args.includes('add')));
 });
