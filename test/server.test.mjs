@@ -33,3 +33,12 @@ test('private default paths reject project and OneDrive locations',()=>{
  assert.ok(good.dataRoot.startsWith('C:\\Users\\test\\AppData\\Local'));
  assert.throws(()=>resolvePrivatePaths({platform:'win32',env:{LOCALAPPDATA:'C:\\Users\\test\\OneDrive'},projectRoot:'C:\\work'}));
 });
+test('browser answers derive origin on server and reject forged/stale replies',async t=>{
+ const f=await fixture(t),key=f.service.registerSession(scope);
+ const pending=f.service.ask({...scope,turnId:'t',requestId:'r',id:'q',text:'Audience?',options:[{id:'a',label:'Customers'}],allowFreeText:false,expiresAt:new Date(Date.now()+45000).toISOString()},{});
+ const send=data=>fetch(f.origin+'/api/question/answer',{method:'POST',headers:{authorization:'Bearer '+tokens.ui,origin:f.origin},body:JSON.stringify(data)});
+ const data={sessionKey:key,id:'q',version:1,answer:{optionId:'a'}};
+ assert.equal((await send({...data,requestId:'forged'})).status,400);
+ assert.equal((await send(data)).status,200);assert.equal((await pending).status,'answered');
+ assert.equal((await send(data)).status,409);
+});
