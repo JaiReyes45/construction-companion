@@ -3,6 +3,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {fail,id,exact} from '../contracts.mjs';
 import {pages,begin,end,template} from './templates.mjs';
+import {validateMemoryWrite} from './validate.mjs';
 const hash=text=>createHash('sha256').update(text).digest('hex');
 export async function openVault({root,projectId,captureEnabled=false}){
  if(!path.isAbsolute(root))fail('INVALID','Absolute vault folder required');id(projectId);
@@ -27,8 +28,7 @@ export async function openVault({root,projectId,captureEnabled=false}){
   async read(page){return readOwned(page);},
   async write(input){
    if(!enabled)return {status:'disabled'};
-   exact(input,['page','expectedHash','operationId','content']);id(input.operationId);
-   if(typeof input.content!=='string'||Buffer.byteLength(input.content)>65536||input.content.includes('<!-- companion:'))fail('INVALID','Invalid memory content');
+   validateMemoryWrite(input);
    const file=filename(input.page);initialize();mkdirSync(path.dirname(file),{recursive:true});confined(path.dirname(file));
    const lock=file+'.lock';let fd;try{fd=openSync(lock,'wx',0o600);}catch{fail('CONFLICT','Another memory write is active');}
    let temp;

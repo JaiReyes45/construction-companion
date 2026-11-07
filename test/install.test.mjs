@@ -27,3 +27,11 @@ test('Claude preview uses its native command array and concrete local activation
  const plan=await planInstall({host:'claude',projectRoot,packageRoot,receiptRoot:path.join(root,'private')});
  assert.equal(plan.activationScope,'local');assert.ok(plan.commands.some(c=>c.args.includes('install')&&c.args.includes('local')));assert.ok(plan.commands.every(c=>Array.isArray(c.args)));
 });
+
+test('both hosts can coexist and each uninstall preserves the other host ignore entry',async t=>{
+ const root=temporaryDirectory(t),projectRoot=path.join(root,'project'),packageRoot=path.join(root,'package'),receiptRoot=path.join(root,'private');await mkdir(projectRoot);await mkdir(packageRoot);
+ const codex=await applyInstall(await planInstall({host:'codex',projectRoot,packageRoot,receiptRoot}));
+ const claude=await applyInstall(await planInstall({host:'claude',projectRoot,packageRoot,receiptRoot}),{run:async()=>({stdout:''})});
+ await uninstall({receipt:codex});const ignore=await readFile(path.join(projectRoot,'.gitignore'),'utf8');assert.ok(ignore.includes('construction-companion claude'));assert.ok(!ignore.includes('construction-companion codex'));
+ await uninstall({receipt:claude,run:async()=>({stdout:''})});assert.ok(!(await readFile(path.join(projectRoot,'.gitignore'),'utf8')).includes('/.construction-companion/'));
+});

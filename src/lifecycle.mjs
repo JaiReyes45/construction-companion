@@ -66,14 +66,18 @@ export async function runDaemon({projectRoot,paths,instance}){
  const config=await json(file(paths,'project.json'))??{};
  const service=createService({store:openStore(file(paths,'events.sqlite')),memoryRoot:paths.memoryRoot??file(paths,'memory'),contextSecret,skillRoots:config.skillRoots??[],capability:{questionMode:'native-chat'}});
  let stopping=false,draining=false,timer;
- const server=await startServer({service,tokens,control:async data=>{
+ let server;
+ async function shutdown(){if(stopping)return;stopping=true;clearInterval(timer);if(server)await server.close();service.close();await removeOwned(paths,'launch.json',instance);await removeOwned(paths,'runtime-lock.json',instance);}
+ try{
+ server=await startServer({service,tokens,control:async data=>{
   if(data.instance!==instance)fail('FORBIDDEN');if(data.action==='status')return {instance};if(data.action!=='stop')fail('INVALID');
   setTimeout(()=>shutdown(),25);return {stopping:true};
  }});
- async function shutdown(){if(stopping)return;stopping=true;clearInterval(timer);await server.close();service.close();await removeOwned(paths,'launch.json',instance);await removeOwned(paths,'runtime-lock.json',instance);}
  const drain=async()=>{if(draining||stopping)return;draining=true;try{await drainSpool({directory:file(paths,'spool'),send:e=>{if(e.projectId!==identity.id)fail('FORBIDDEN');return service.ingest(e)}})}finally{draining=false;}};
  timer=setInterval(()=>drain().catch(()=>{}),150);await drain();
+ if((await json(file(paths,'runtime-lock.json')))?.nonce!==instance)fail('CONFLICT','Startup ownership changed');
  await writePrivateJson(file(paths,'launch.json'),{origin:server.origin,tokens,contextSecret,instance,projectId:identity.id,projectRoot:identity.root,pid:process.pid,capability:{questionMode:'native-chat'}});
  process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
  return {shutdown};
+ }catch(error){await shutdown();throw error;}
 }

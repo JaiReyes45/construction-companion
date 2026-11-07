@@ -35,6 +35,13 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
   resolveSession(key){const s=handles.get(key);if(!s)fail('NOT_FOUND','Unknown session');return s;},
   ingest(e){
    validateEvent(e);service.registerSession(e);const result=store.append(e);
+   if(!result.duplicate&&['session.start','session.end'].includes(e.type)){
+    const session=store.read(e,'session');store.compareAndSet(e,'session',session.version,{...session.value,status:e.type==='session.end'?'ended':'active'});
+    if(e.type==='session.end'){
+     const active=store.read(e,'active-turn');if(active)store.compareAndSet(e,'active-turn',active.version,{...active.value,active:false});
+     const question=broker.get(e);if(question?.status==='open')broker.cancel(question);
+    }
+   }
    if(!result.duplicate&&e.turnId&&['turn.start','turn.end'].includes(e.type)){
     const old=store.read(e,'active-turn');
     if(e.type==='turn.start'||old?.value.turnId===e.turnId){

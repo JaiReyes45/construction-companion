@@ -16,7 +16,13 @@ export function applyEvent(scene,e){
  }
  if(e.type==='skill.declare'&&e.skillId)next.skills={...scene.skills,[e.skillId]:{id:e.skillId,state:'declared',label:e.payload.label??e.skillId}};
  if(e.type.startsWith('actor.')&&e.actorId)next.actors={...scene.actors,[e.actorId]:{id:e.actorId,status:e.type==='actor.start'?'working':'finished',evidence:e.evidence}};
- if(e.type.startsWith('permission.')){const id=e.taskId??'native-permission';next.permissions={...scene.permissions,[id]:{id,status:e.type==='permission.wait'?'waiting':'resolved'}};}
+ if(e.type.startsWith('permission.')){const id=e.taskId??'native-permission';next.permissions={...scene.permissions,[id]:{id,turnId:e.turnId,status:e.type==='permission.wait'?'waiting':'resolved'}};}
+ if(e.evidence==='observed'){
+  for(const [id,p]of Object.entries(next.permissions)){
+   const correlatedWork=e.taskId===id&&['task.verify','task.fail','task.complete'].includes(e.type)&&p.turnId===e.turnId;
+   if(p.status==='waiting'&&(e.type==='session.end'||e.type==='turn.end'&&p.turnId===e.turnId||correlatedWork))next.permissions={...next.permissions,[id]:{...p,status:'ended'}};
+  }
+ }
  return next;
 }
 export function projectScene(events){return events.reduce(applyEvent,emptyScene());}

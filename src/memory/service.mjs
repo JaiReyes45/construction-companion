@@ -17,7 +17,8 @@ export function attachMemory(service){
  }
  service.memoryStatus=key=>{
   const scope=service.resolveSession(key),rows=store.scan('memory-outbox:').filter(r=>JSON.stringify(r.scope)===scopeKey(scope));
-  return {enabled:consent(scope).enabled,conflicts:rows.filter(r=>r.value.status==='conflict').length};
+  const failed=rows.filter(r=>r.value.status==='failed').length;
+  return {enabled:consent(scope).enabled,conflicts:rows.filter(r=>r.value.status==='conflict').length+failed,failed};
  };
  service.setMemoryConsent=async(key,input)=>{
   exact(input,['enabled','selectedRoot']);if(typeof input.enabled!=='boolean')fail('INVALID');
