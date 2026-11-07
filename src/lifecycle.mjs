@@ -6,6 +6,8 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {resolvePrivatePaths} from './private-paths.mjs';
 import {fail} from './contracts.mjs';
+import {inspectHost} from './compat.mjs';
+import {resolveHostCapability} from './host/capabilities.mjs';
 const execute=promisify(execFile),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const file=(paths,name)=>path.join(paths.dataRoot,name);
 export async function projectIdentity(projectRoot){const root=await realpath(projectRoot);return {root,id:createHash('sha256').update(process.platform==='win32'?root.toLowerCase():root).digest('hex')};}
@@ -64,7 +66,8 @@ export async function runDaemon({projectRoot,paths,instance}){
  const [{openStore},{createService},{startServer},{drainSpool}]=await Promise.all([import('./core/store.mjs'),import('./core/service.mjs'),import('./server.mjs'),import('./host/spool.mjs')]);
  const tokens={ui:randomBytes(32).toString('hex'),ingest:randomBytes(32).toString('hex')},contextSecret=randomBytes(32).toString('hex');
  const config=await json(file(paths,'project.json'))??{};
- const service=createService({store:openStore(file(paths,'events.sqlite')),memoryRoot:paths.memoryRoot??file(paths,'memory'),contextSecret,skillRoots:config.skillRoots??[],capability:{questionMode:'native-chat'}});
+ const capabilities=Object.fromEntries(await Promise.all((config.hosts??[]).filter(host=>['codex','claude'].includes(host)).map(async host=>[host,resolveHostCapability(await inspectHost({host}))])));
+ const service=createService({store:openStore(file(paths,'events.sqlite')),memoryRoot:paths.memoryRoot??file(paths,'memory'),contextSecret,skillRoots:config.skillRoots??[],capability:{hosts:capabilities}});
  let stopping=false,draining=false,timer;
  let server;
  async function shutdown(){if(stopping)return;stopping=true;clearInterval(timer);if(server)await server.close();service.close();await removeOwned(paths,'launch.json',instance);await removeOwned(paths,'runtime-lock.json',instance);}
@@ -76,7 +79,7 @@ export async function runDaemon({projectRoot,paths,instance}){
  const drain=async()=>{if(draining||stopping)return;draining=true;try{await drainSpool({directory:file(paths,'spool'),send:e=>{if(e.projectId!==identity.id)fail('FORBIDDEN');return service.ingest(e)}})}finally{draining=false;}};
  timer=setInterval(()=>drain().catch(()=>{}),150);await drain();
  if((await json(file(paths,'runtime-lock.json')))?.nonce!==instance)fail('CONFLICT','Startup ownership changed');
- await writePrivateJson(file(paths,'launch.json'),{origin:server.origin,tokens,contextSecret,instance,projectId:identity.id,projectRoot:identity.root,pid:process.pid,capability:{questionMode:'native-chat'}});
+ await writePrivateJson(file(paths,'launch.json'),{origin:server.origin,tokens,contextSecret,instance,projectId:identity.id,projectRoot:identity.root,pid:process.pid,capabilities});
  process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
  return {shutdown};
  }catch(error){await shutdown();throw error;}

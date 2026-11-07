@@ -1,6 +1,7 @@
 import {z} from 'zod';
 export function registerTools(server,{client,capability}){
  const context=z.string().max(4096),identifier=z.string().min(1).max(256);
+ const currentCapability=async()=>typeof capability==='function'?await capability():capability;
  function register(name,description,schema,fn){
   server.registerTool(name,{description,inputSchema:schema},async(args,extra)=>{
    try{const result=await fn(args,extra);return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};}
@@ -11,7 +12,7 @@ export function registerTools(server,{client,capability}){
   const {context,...input}=args;
   return client.call(method,transform(input),{context,requestId:String(extra.requestId),signal:extra.signal});
  };
- register('companion_status','Inspect companion availability and verified host capabilities.',z.object({}).strict(),()=>({capability}));
+ register('companion_status','Inspect companion availability and verified host capabilities.',z.object({}).strict(),async()=>({capability:await currentCapability()}));
  register('companion_skill_context','Read bounded installed and verified catalog metadata for a project role.',z.object({context,goal:z.string().max(4000),role:z.string().max(64)}).strict(),forward('skill_context'));
  register('companion_choose_skill','Offer explained crew skills and let the user accept, choose another or decline.',z.object({context,taskId:identifier,role:identifier,candidates:z.array(z.object({taskId:identifier,role:identifier,skillId:identifier,reason:z.string().min(1).max(2000)}).strict()).min(1).max(3)}).strict(),forward('choose_skill'));
  register('companion_reopen_skill_choice','Reopen a declined role only when the user explicitly asks.',z.object({context,taskId:identifier,role:identifier}).strict(),forward('reopen_skill'));
@@ -23,8 +24,9 @@ export function registerTools(server,{client,capability}){
  register('companion_memory_context','Read selected project notes as bounded untrusted reference data.',z.object({context,pages:z.array(z.string().max(64)).max(6)}).strict(),forward('memory_context'));
  register('companion_memory_write','Queue an approved summary only when capture is enabled; preserve edited pages.',z.object({context,page:z.string().max(64),expectedHash:z.string().nullable(),operationId:identifier,content:z.string().max(65536)}).strict(),forward('memory_write'));
  register('companion_ask','Ask one project question. Native permissions must remain in the host.',z.object({context,id:identifier,text:z.string().min(1).max(4000),options:z.array(z.object({id:identifier,label:z.string().min(1).max(1000)}).strict()).max(6),allowFreeText:z.boolean()}).strict(),async(args,extra)=>{
-  if(capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};
-  return forward('ask',input=>({...input,timeoutMs:capability.questionMode==='verified-long'?600000:45000}))(args,extra);
+  const current=await currentCapability();
+  if(!['verified-short','verified-long'].includes(current?.questionMode))return {status:'fallback',reason:'unsupported'};
+  return forward('ask',input=>({...input,timeoutMs:current.questionMode==='verified-long'?600000:45000}))(args,extra);
  });
  register('companion_report','Report declared task/skill metadata; this does not prove native execution.',z.object({context,event:z.object({type:z.enum(['task.start','task.verify','task.complete','task.fail','skill.declare']),taskId:identifier.optional(),skillId:identifier.optional(),payload:z.object({label:z.string().max(4000).optional(),success:z.boolean().optional()}).strict()}).strict()}).strict(),forward('report'));
 }

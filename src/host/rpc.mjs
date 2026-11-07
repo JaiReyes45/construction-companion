@@ -7,6 +7,8 @@ export async function dispatchRpc({service,contextSecret,capability,data,signal}
  if(!contextSecret)fail('UNSUPPORTED','No native context verifier configured');
  const verified=verifyContext(data.context,contextSecret,service.now());
  const origin={...verified.scope,turnId:verified.turnId,requestId:id(data.requestId)};
+ capability=capability?.hosts?capability.hosts[origin.host]:capability;
+ if(!['verified-short','verified-long'].includes(capability?.questionMode))capability={questionMode:'native-chat'};
  const active=service.store.read(origin,'active-turn');
  if(!active?.value.active||active.value.turnId!==origin.turnId)fail('CONFLICT','Native turn is not active');
  const input=data.input;

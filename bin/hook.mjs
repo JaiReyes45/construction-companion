@@ -10,6 +10,7 @@ try{
  const config=JSON.parse(await readFile(path.join(paths.dataRoot,'project.json'),'utf8'));
  if(config.projectId!==identity.id||!config.hosts?.includes(host))process.exit(0);
  const launch=await readLaunch(paths);
- const result=runHook({host,input:raw,spoolDirectory:path.join(paths.dataRoot,'spool'),context:{projectId:identity.id,sequence:Date.now(),secret:launch?.contextSecret,questionSupportVerified:false}});
+ const questionSupportVerified=launch?.projectId===identity.id&&['verified-short','verified-long'].includes(launch.capabilities?.[host]?.questionMode);
+ const result=runHook({host,input:raw,spoolDirectory:path.join(paths.dataRoot,'spool'),context:{projectId:identity.id,sequence:Date.now(),secret:launch?.contextSecret,questionSupportVerified}});
  if(result.additionalContext)process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:raw.hook_event_name,additionalContext:result.additionalContext}}));
 }catch{/* Unconfigured and offline hooks never interrupt the user's coding session. */}
