@@ -33,7 +33,7 @@ export function createSkillChoices({store,broker,inventory,now=Date.now}){
    return {status:'chosen',choice:{taskId,role,skillId:skill.id,action:'use',reason:skill.reason}};
   },
   reopen(scope,input){const k=key(input),old=store.read(scope,k);if(old)store.compareAndSet(scope,k,old.version,{...old.value,declined:false});},
-  bindings(scope,taskId){return store.scan('choice:').filter(r=>JSON.stringify(r.scope)===scopeKey(scope)&&r.value.taskId===taskId&&r.value.binding).map(r=>r.value.binding);},
+  bindings(scope,taskId){return store.scan('choice:').filter(r=>JSON.stringify(r.scope)===scopeKey(scope)&&(taskId===undefined||r.value.taskId===taskId)&&r.value.binding).map(r=>r.value.binding);},
   recommendations(scope){return store.read(scope,'skill-recommendations')?.value??null;}
  };return choices;
 }

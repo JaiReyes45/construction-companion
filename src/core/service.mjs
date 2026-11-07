@@ -68,6 +68,7 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
    }
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
    if(route==='/api/scene'&&method==='GET')return service.scene(url.searchParams.get('sessionKey'));
+   if(route==='/api/bindings'&&method==='GET')return service.bindings(url.searchParams.get('sessionKey'));
    if(route==='/api/skills'&&method==='GET')return service.skillRecommendations(url.searchParams.get('sessionKey'));
    if(route==='/api/installation'&&method==='GET')return visibleInstallation(store,service.resolveSession(url.searchParams.get('sessionKey')));
    if(route==='/api/memory'&&method==='GET')return service.memoryStatus(url.searchParams.get('sessionKey'));
