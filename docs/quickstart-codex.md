@@ -48,6 +48,8 @@ cd "C:\Projects\my-website"
 codex --enable hooks
 ```
 
+Choose a model offered by the CLI in `/model`. If it reports an unsupported inherited model alias, select an available CLI model; this acceptance run used `gpt-6-sol`. The companion does not change your model configuration.
+
 Review the project trust and the companion's hook commands using Codex's native controls (`/hooks`). Review native tool requests in Codex as they appear. If a skill file read is blocked by the Windows sandbox, have Codex request permission for that exact read; no full-access mode is needed. Node must be on Codex's PATH for hooks.
 
 Prompt normally: **“I want to build a website for my bakery. Help me plan it.”** The head engineer can ask questions and recommend an architect skill. Choose **Use installed**, **Choose another skill**, or **Continue without**. Use the **Project session** selector when several chats are present.
