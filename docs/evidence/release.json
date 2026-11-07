@@ -1,0 +1,9 @@
+{
+  "claims": [
+    {"host":"codex","hostVersion":"0.155.1","platform":"win32","capability":"questions","ready":false},
+    {"host":"claude","hostVersion":"unknown","platform":"win32","capability":"questions","ready":false},
+    {"host":"codex","hostVersion":"unknown","platform":"linux","capability":"native-install","ready":false},
+    {"host":"claude","hostVersion":"unknown","platform":"linux","capability":"native-install","ready":false}
+  ],
+  "evidence": []
+}

@@ -4,7 +4,7 @@ import {emptyScene} from './projection.mjs';
 import {mountSite} from './site.mjs';
 const $=id=>document.getElementById(id),node=(tag,text,className)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)');
-let api=null,sessionKey=null,timer=null,questionKey=null,online=false,paused=false,lastSnapshot=null,polling=false;
+let api=null,sessionKey=null,timer=null,questionKey=null,online=false,paused=false,lastSnapshot=null,polling=false,memoryDirty=false;
 let site=mountSite({canvas:$('site'),scene:emptyScene(),reducedMotion:reduce.matches});site.setPaused(true);
 const notice=text=>{$('notice').textContent=text;};
 function render(snapshot){
@@ -16,6 +16,7 @@ function render(snapshot){
  site.update(snapshot.scene);site.setPaused(paused||!online);
  const q=snapshot.question,newKey=sessionKey+':'+(q?q.id+':'+q.version+':'+q.status:'none');
  if(newKey!==questionKey){
+  const restoreFocus=$('question').contains(document.activeElement);
   questionKey=newKey;$('question').replaceChildren();
   if(q){
    $('question').append(node('h3',q.text));
@@ -26,6 +27,7 @@ function render(snapshot){
     if(q.allowFreeText){const form=node('form',undefined,'free-answer'),input=node('input'),button=node('button','Send');input.setAttribute('aria-label','Your answer');input.required=true;input.maxLength=16000;form.append(input,button);form.addEventListener('submit',e=>{e.preventDefault();answer(q,{text:input.value})});$('question').append(form);}
    }else $('question').append(node('p',q.status==='answered'?'Answer delivered. Your coding host can continue.':'This question is '+q.status+'. Continue in your coding host.','muted'));
   }else{$('question').append(node('h3','Ready when you are.'),node('p','Continue in your coding host. Supported questions and crew choices appear here.'));}
+  if(restoreFocus)$('question').focus();
  }
  for(const control of $('question').querySelectorAll('button,input'))control.disabled=!online;
  $('tasks').replaceChildren();
@@ -38,7 +40,7 @@ function render(snapshot){
  if(snapshot.recommendations&&q?.id===snapshot.recommendations.questionId&&q.status==='open'){
   for(const skill of snapshot.recommendations.candidates){const detail=node('article',undefined,'skill-detail');detail.append(node('h3',skill.name),node('p',skill.reason),node('small',skill.availability+' · '+(skill.version??skill.revision)+' · '+(skill.license??'unknown license')),node('small',skill.source));if(skill.prerequisites?.length)detail.append(node('small',skill.prerequisites.join(' ')));$('recommendations').append(detail);}
  }
- if(document.activeElement!==$('memory-enabled'))$('memory-enabled').checked=Boolean(snapshot.memory.enabled);
+ if(!memoryDirty)$('memory-enabled').checked=Boolean(snapshot.memory.enabled);
  $('memory-enabled').disabled=!online;$('save-memory').disabled=!online;
  $('memory-state').textContent=snapshot.memory.conflicts? snapshot.memory.conflicts+' notebook conflict(s) need review. Your coding answers remain accepted.':snapshot.memory.enabled?'Approved decisions are saved to your project notebook.':'Memory capture is off.';
  if(vm.historyGap)notice('Some activity metadata is missing. The site shows only the evidence available.');
@@ -54,6 +56,7 @@ async function refresh(){
  try{
   const sessions=await current.sessions();if(api!==current)return;
   const signature=sessions.map(s=>s.sessionKey).join('|');
+  $('demo-notice').hidden=!sessions.some(s=>s.demo);
   if($('session').dataset.signature!==signature){$('session').dataset.signature=signature;$('session').replaceChildren(...sessions.map(s=>{const option=node('option',s.host+' · '+s.sessionKey.slice(0,8));option.value=s.sessionKey;return option}));if(!sessions.length)$('session').append(node('option','Waiting for your coding host'));}
   if(!sessionKey&&sessions.length)sessionKey=sessions[0].sessionKey;
   if(sessionKey&&!sessions.some(s=>s.sessionKey===sessionKey))sessionKey=sessions[0]?.sessionKey??null;
@@ -65,10 +68,12 @@ async function refresh(){
  finally{polling=false;clearTimeout(timer);if(api)timer=setTimeout(refresh,online?1200:4000);}
 }
 $('connect-form').addEventListener('submit',async e=>{e.preventDefault();api?.dispose();api=createApi({origin:location.origin,token:$('token').value.trim()});$('token').value='';sessionKey=null;questionKey=null;notice('Connecting…');await refresh();if(online)notice('Connected. Continue in your coding host.');});
-$('session').addEventListener('change',()=>{sessionKey=$('session').value;questionKey=null;refresh();});
-$('disconnect').addEventListener('click',()=>{api?.dispose();api=null;clearTimeout(timer);online=false;sessionKey=null;questionKey=null;lastSnapshot=null;site.setPaused(true);$('connection').textContent='Not connected';$('connect-panel').hidden=false;$('disconnect').hidden=true;$('session').disabled=true;$('memory-enabled').disabled=true;$('save-memory').disabled=true;$('question').replaceChildren(node('h3','Disconnected.'),node('p','Reconnect to continue with your project.'));notice('Connection token cleared from this tab.');});
+$('session').addEventListener('change',()=>{sessionKey=$('session').value;questionKey=null;memoryDirty=false;$('vault-path').value='';refresh();});
+$('disconnect').addEventListener('click',()=>{api?.dispose();api=null;clearTimeout(timer);online=false;sessionKey=null;questionKey=null;lastSnapshot=null;memoryDirty=false;$('vault-path').value='';site.update(emptyScene());site.setPaused(true);for(const id of ['tasks','crew','recommendations'])$(id).replaceChildren();$('native-permission').hidden=true;$('installation').hidden=true;$('demo-notice').hidden=true;$('completion-count').textContent='No observed completions yet';$('activity-label').textContent='Crew standing by';$('status-text').textContent='Connect to bring your project into view.';$('memory-state').textContent='Memory capture is off.';$('memory-enabled').checked=false;$('connection').textContent='Not connected';$('connect-panel').hidden=false;$('disconnect').hidden=true;$('session').replaceChildren(node('option','Connect a project to begin'));delete $('session').dataset.signature;$('session').disabled=true;$('memory-enabled').disabled=true;$('save-memory').disabled=true;$('question').replaceChildren(node('h3','Disconnected.'),node('p','Reconnect to continue with your project.'));notice('Connection token cleared from this tab.');});
 $('pause').addEventListener('click',()=>{paused=!paused;$('pause').setAttribute('aria-pressed',String(paused));$('pause').textContent=paused?'Resume motion':'Pause motion';site.setPaused(paused||!online);});
-$('memory-form').addEventListener('submit',async e=>{e.preventDefault();if(!api||!sessionKey)return;try{const root=$('vault-path').value.trim();await api.setMemoryConsent(sessionKey,{enabled:$('memory-enabled').checked,...(root?{selectedRoot:root}:{})});notice('Notebook preference saved.');await refresh();}catch(error){notice(error.message);}});
+$('memory-form').addEventListener('input',()=>{memoryDirty=true;});
+$('memory-form').addEventListener('submit',async e=>{e.preventDefault();if(!api||!sessionKey)return;try{const root=$('vault-path').value.trim();await api.setMemoryConsent(sessionKey,{enabled:$('memory-enabled').checked,...(root?{selectedRoot:root}:{})});memoryDirty=false;notice('Notebook preference saved.');await refresh();}catch(error){notice(error.message);}});
 reduce.addEventListener('change',()=>{site.destroy();site=mountSite({canvas:$('site'),scene:lastSnapshot?.scene??emptyScene(),reducedMotion:reduce.matches});site.setPaused(paused||!online)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();else clearTimeout(timer)});
 window.addEventListener('pagehide',()=>{site.destroy();api?.dispose();clearTimeout(timer)});
+
