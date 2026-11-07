@@ -6,6 +6,6 @@ Hooks retain allowlisted event IDs, task/actor IDs, timestamps and status metada
 
 Memory starts disabled. The browser can enable it and select a vault parent; the service creates a distinct project subfolder. It writes only known owned Markdown pages, uses hashes and backups, rejects path escapes and does not ingest unrelated notes. Retrieved context is limited to 8 KiB, including attribution, and is untrusted reference data.
 
-Skill metadata is not execution authority. Installation needs a separate affirmative review for the exact source, revision, destination and command, followed by native host permission and verification. This preview enables no automatic third-party installation recipes. The game cannot approve a shell command.
+Skill metadata is not execution authority. Installation needs a separate affirmative review for the exact source, revision, destination and command, followed by native host permission and verification. This release enables no automatic third-party installation recipes. The game cannot approve a shell command.
 
 Animation and routing make zero model requests. Your host's normal work still incurs its normal usage. The companion does not claim token savings without measurements from the host.

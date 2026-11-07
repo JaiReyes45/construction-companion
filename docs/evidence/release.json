@@ -1,9 +1,58 @@
 {
   "claims": [
-    {"host":"codex","hostVersion":"0.155.1","platform":"win32","capability":"questions","ready":false},
-    {"host":"claude","hostVersion":"unknown","platform":"win32","capability":"questions","ready":false},
-    {"host":"codex","hostVersion":"unknown","platform":"linux","capability":"native-install","ready":false},
-    {"host":"claude","hostVersion":"unknown","platform":"linux","capability":"native-install","ready":false}
+    {
+      "host": "codex",
+      "hostVersion": "0.155.1",
+      "platform": "win32",
+      "capability": "questions",
+      "packageHash": "36b6635717cc2cef7fa302e67de6d0eacf703122b70cc78e4efbe063c95bacb3",
+      "ready": true
+    },
+    {
+      "host": "codex",
+      "hostVersion": "0.155.1",
+      "platform": "win32",
+      "capability": "native-install",
+      "packageHash": "36b6635717cc2cef7fa302e67de6d0eacf703122b70cc78e4efbe063c95bacb3",
+      "ready": true
+    },
+    {
+      "host": "claude",
+      "hostVersion": "2.1.319",
+      "platform": "win32",
+      "capability": "questions",
+      "ready": false
+    },
+    {
+      "host": "codex",
+      "hostVersion": "unknown",
+      "platform": "linux",
+      "capability": "native-install",
+      "ready": false
+    }
   ],
-  "evidence": []
+  "evidence": [
+    {
+      "host": "codex",
+      "hostVersion": "0.155.1",
+      "platform": "win32",
+      "capability": "questions",
+      "packageHash": "36b6635717cc2cef7fa302e67de6d0eacf703122b70cc78e4efbe063c95bacb3",
+      "kind": "native",
+      "passed": true,
+      "testedAt": "2026-11-07T18:22:43.662866+00:00",
+      "details": "native-codex-0.2.0.json"
+    },
+    {
+      "host": "codex",
+      "hostVersion": "0.155.1",
+      "platform": "win32",
+      "capability": "native-install",
+      "packageHash": "36b6635717cc2cef7fa302e67de6d0eacf703122b70cc78e4efbe063c95bacb3",
+      "kind": "native",
+      "passed": true,
+      "testedAt": "2026-11-07T18:22:43.662866+00:00",
+      "details": "native-codex-0.2.0.json"
+    }
+  ]
 }

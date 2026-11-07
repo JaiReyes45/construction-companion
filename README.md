@@ -8,7 +8,7 @@ The companion makes no model API calls. Your coding host still runs the work and
 
 [Watch the captioned tutorial](https://github.com/JaiReyes45/construction-companion/releases/download/v0.1.0-preview.1/construction-companion-v2-tutorial.mp4) · [Preview downloads](https://github.com/JaiReyes45/construction-companion/releases/tag/v0.1.0-preview.1)
 
-![Construction Companion showing a clearly labelled simulated project](docs/demo-preview.png)
+![A real Codex planning question in Construction Companion](docs/native-codex.png)
 
 ## Install from source
 

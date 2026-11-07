@@ -1,0 +1,93 @@
+{
+  "release": "0.2.0",
+  "testedAt": "2026-11-07T18:22:43.662866+00:00",
+  "implementationCommit": "611a559436eca1f99b089e782547e260569a5252",
+  "host": "codex",
+  "hostVersion": "0.155.1",
+  "platform": "win32",
+  "model": "gpt-6-sol",
+  "packageHash": "36b6635717cc2cef7fa302e67de6d0eacf703122b70cc78e4efbe063c95bacb3",
+  "nativeFinal": {
+    "passed": true,
+    "ordinaryPromptReadGenuineSuperpowers": true,
+    "discoveredHooks": 10,
+    "mcpTools": 13,
+    "browserAnswerReturnedToOriginatingTurn": true,
+    "answerInformedNextModelResponse": true,
+    "nativeInterruptCancelledNextQuestion": true,
+    "lateAnswerHttpStatus": 409,
+    "cleanInstallAndRemovalPreservedUnrelatedEdits": true,
+    "nativeReviewRegressionIndependentProjectCaches": 2,
+    "nativeReviewRegressionRemovalPreservedOtherProject": true,
+    "finalTestRunnerStopped": true,
+    "userWideEntryEnabled": false,
+    "persistentOwnedHookTrustEntries": 0
+  },
+  "nativeExtended": {
+    "kind": "native",
+    "passed": true,
+    "installedSkillUseAlternativeDecline": true,
+    "declineSuppressedRepeat": true,
+    "memoryConsentWriteReadEditorConflictReconcileOptOut": true,
+    "questionTimeoutMilliseconds": 45039,
+    "nativeChatFallback": true,
+    "runnerStopRestartAndTokenRotation": true,
+    "oldContextAndBrowserCredentialsRejected": true,
+    "sessionsRetained": true,
+    "note": "Extended checks preceded installer review fixes; the runtime files below are byte-identical in the final package. Final ordinary-prompt and install/removal checks were repeated on the final package.",
+    "unchangedRuntimeFiles": [
+      "src/core/service.mjs",
+      "src/core/store.mjs",
+      "src/skills/choices.mjs",
+      "src/skills/installation-service.mjs",
+      "src/skills/intents.mjs",
+      "src/skills/inventory.mjs",
+      "src/memory/context.mjs",
+      "src/memory/outbox.mjs",
+      "src/memory/service.mjs",
+      "src/memory/templates.mjs",
+      "src/memory/validate.mjs",
+      "src/memory/vault.mjs",
+      "src/mcp/client.mjs",
+      "src/mcp/server.mjs",
+      "src/mcp/tools.mjs",
+      "src/host/rpc.mjs",
+      "src/host/context.mjs",
+      "src/host/capabilities.mjs",
+      "src/host/hook.mjs",
+      "src/host/normalize.mjs",
+      "src/host/spool.mjs",
+      "bin/mcp.mjs",
+      "bin/hook.mjs",
+      "skills/construction-companion/SKILL.md"
+    ]
+  },
+  "automated": {
+    "tests": 79,
+    "passed": 79,
+    "failed": 0,
+    "cleanPinnedDependencyInstall": true
+  },
+  "review": {
+    "model": "gpt-6-astra",
+    "importantFindings": 2,
+    "fixedWithRedGreenTests": 2,
+    "deferredMinors": []
+  },
+  "tutorial": {
+    "kind": "real native Codex/browser recording",
+    "seconds": 34.97,
+    "idleThinkingIntervalsShortened": true,
+    "captions": true,
+    "audioNarration": false,
+    "decodeCheck": "passed"
+  },
+  "unverified": [
+    "Claude native session",
+    "Codex desktop application",
+    "other Codex versions",
+    "native macOS/Linux",
+    "automatic third-party install recipes",
+    "long question waits"
+  ]
+}

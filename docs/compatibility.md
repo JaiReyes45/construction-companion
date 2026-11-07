@@ -17,4 +17,4 @@ Generated packages contain 13 MCP tools and 10 lifecycle hooks. Codex 0.155.1's 
 
 Limits: no long-running question wait, automatic third-party install recipe, independent worker agents, verified desktop integration, or cross-platform native claim. Animation makes no model requests; normal coding-host work uses the host's allowance. Native permission hooks may lack a tool ID, so the site refers users to the host for current permission status. Concurrent observational hooks can lose activity metadata; the site displays a history-gap notice and does not invent completion or usage totals.
 
-Automated tests and CI remain distinct from native acceptance. The old [preview evidence](evidence/preview-2026-11-08.json) is retained as history; new release receipts must match the final package hash before promotion.
+Automated tests and CI remain distinct from native acceptance. The old [preview evidence](evidence/preview-2026-11-08.json) is retained as history; the [0.2.0 native receipt](evidence/native-codex-0.2.0.json) records the final package hash and precise test scope.

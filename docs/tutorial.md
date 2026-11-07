@@ -1,4 +1,20 @@
-# V2 tutorial
+# Native Codex tutorial
+
+[Watch the 35-second native walkthrough](https://github.com/JaiReyes45/construction-companion/releases/download/v0.2.0/construction-companion-native-tutorial.mp4) · [Download captions](https://github.com/JaiReyes45/construction-companion/releases/download/v0.2.0/construction-companion-native-tutorial.srt) · [Install and configure](quickstart-codex.md)
+
+This recording shows the real local browser interface connected to Codex CLI 0.155.1 on Windows. The fictional bakery prompt, questions, browser answer and interruption are native interactions. Idle model-thinking intervals were shortened; captions are burned in and there is no audio narration.
+
+1. Install the package, review native hooks, start the runner and use `connect --copy-token`.
+2. Open the local URL and connect, then prompt Codex normally.
+3. Answer the head engineer with a button or your own words. The answer returns to the originating Codex turn.
+4. Continue the conversation in the game. Command permissions remain in Codex.
+5. Interrupting the native turn cancels its pending game question. Late replies are rejected. Unanswered questions fall back to native chat after 45 seconds.
+
+To configure skill recommendations or optional Obsidian-compatible notes, follow the setup guide. The older simulation below demonstrates those interface controls but is not native-host evidence.
+
+---
+
+# Earlier preview simulation
 
 The captioned tutorial records the actual local browser interface with **simulated host events**. It demonstrates browser behavior, not a verified native Codex or Claude session. The video is distributed as a preview release asset; the source repository keeps this transcript.
 
