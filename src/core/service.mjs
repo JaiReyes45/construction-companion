@@ -2,12 +2,16 @@ import {randomUUID} from 'node:crypto';
 import {scopeKey,fail,validateEvent,exact} from '../contracts.mjs';
 import {createQuestionBroker} from '../questions.mjs';
 import {dispatchRpc} from '../host/rpc.mjs';
-export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'}}){
+import {readInventory,skillContext} from '../skills/inventory.mjs';
+import {fileURLToPath} from 'node:url';
+export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
  const handles=new Map();
  const broker=createQuestionBroker({store,now});broker.recover();
  for(const row of store.scan('session'))if(row.key==='session')handles.set(row.value.sessionKey,row.value.scope);
  const service={
   store,now,memoryRoot,broker,
+  inventory:()=>readInventory({roots:skillRoots,catalogPath}),
+  async skillContext(sessionKey,input){service.resolveSession(sessionKey);return skillContext({skills:await service.inventory(),...input});},
   registerSession(s){
    const key=scopeKey(s),scope=JSON.parse(key),clean={projectId:scope[0],host:scope[1],sessionId:scope[2]};
    const old=store.read(clean,'session');if(old)return old.value.sessionKey;

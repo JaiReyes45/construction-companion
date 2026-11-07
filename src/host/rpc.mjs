@@ -9,6 +9,7 @@ export async function dispatchRpc({service,contextSecret,capability,data,signal}
  const active=service.store.read(origin,'active-turn');
  if(!active?.value.active||active.value.turnId!==origin.turnId)fail('CONFLICT','Native turn is not active');
  const input=data.input;
+ if(data.method==='skill_context'){exact(input,['goal','role']);return {skills:await service.skillContext(service.registerSession(origin),input)};}
  if(data.method==='ask'){
   exact(input,['id','text','options','allowFreeText','timeoutMs']);
   if(capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "ui-ux-pro-max",
+    "name": "ui-ux-pro-max",
+    "purpose": "Website layouts, typography, accessibility and interface design",
+    "roles": ["architect"],
+    "source": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+    "revision": "b7d5353e0130feb8c5574ef1251f8a1db1873ccb",
+    "version": "2.15.0",
+    "license": "MIT",
+    "checkedAt": "2026-11-07",
+    "prerequisites": ["Review the upstream platform installer and shared script/data layout; no automatic installation recipe is enabled."]
+  }
+]
