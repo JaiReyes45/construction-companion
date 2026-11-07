@@ -19,6 +19,9 @@ export function registerTools(server,{client,capability}){
  register('companion_request_install','Check the affirmative review and exact installation digest before native execution.',z.object({context,intentId:identifier,version:z.number().int().positive(),digest:z.string().length(64)}).strict(),forward('install_request'));
  register('companion_verify_install','Rediscover the installed package; report any required reload.',z.object({context,intentId:identifier,hostReloaded:z.boolean()}).strict(),forward('install_verify'));
  register('companion_fail_install','Record a native installation failure without marking a worker active.',z.object({context,intentId:identifier,reason:z.string().max(1000)}).strict(),forward('install_fail'));
+ register('companion_memory_status','Inspect project memory capture consent and conflicts.',z.object({context}).strict(),forward('memory_status'));
+ register('companion_memory_context','Read selected project notes as bounded untrusted reference data.',z.object({context,pages:z.array(z.string().max(64)).max(6)}).strict(),forward('memory_context'));
+ register('companion_memory_write','Queue an approved summary only when capture is enabled; preserve edited pages.',z.object({context,page:z.string().max(64),expectedHash:z.string().nullable(),operationId:identifier,content:z.string().max(65536)}).strict(),forward('memory_write'));
  register('companion_ask','Ask one project question. Native permissions must remain in the host.',z.object({context,id:identifier,text:z.string().min(1).max(4000),options:z.array(z.object({id:identifier,label:z.string().min(1).max(1000)}).strict()).max(6),allowFreeText:z.boolean()}).strict(),async(args,extra)=>{
   if(capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};
   return forward('ask',input=>({...input,timeoutMs:capability.questionMode==='verified-long'?600000:45000}))(args,extra);

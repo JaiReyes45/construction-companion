@@ -1,10 +1,11 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {scopeKey,fail,validateEvent,exact} from '../contracts.mjs';
 import {createQuestionBroker} from '../questions.mjs';
 import {dispatchRpc} from '../host/rpc.mjs';
 import {readInventory,skillContext} from '../skills/inventory.mjs';
 import {createSkillChoices} from '../skills/choices.mjs';
 import {visibleInstallation} from '../skills/intents.mjs';
+import {attachMemory} from '../memory/service.mjs';
 import {fileURLToPath} from 'node:url';
 export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],installRecipes={},catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
  const handles=new Map();
@@ -14,7 +15,14 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
   store,now,memoryRoot,broker,installRecipes,
   inventory:()=>readInventory({roots:skillRoots,catalogPath}),
   async skillContext(sessionKey,input){service.resolveSession(sessionKey);return skillContext({skills:await service.inventory(),...input});},
-  offerSkills(origin,input,options){return service.choices.offer(origin,input,options);},
+  async offerSkills(origin,input,options){
+   const result=await service.choices.offer(origin,input,options);
+   if(result.status==='chosen'&&['use','decline'].includes(result.choice.action)){
+    try{await service.captureSkillDecision(origin,result.choice,await service.inventory(),'choice-'+createHash('sha256').update(JSON.stringify(origin)).digest('hex'));}
+    catch{return {...result,memory:{status:'needs-review'}};}
+   }
+   return result;
+  },
   skillRecommendations(key){return service.choices.recommendations(service.resolveSession(key));},
   bindings(key,taskId){return service.choices.bindings(service.resolveSession(key),taskId);},
   registerSession(s){
@@ -54,8 +62,10 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
    if(route==='/api/skills'&&method==='GET')return service.skillRecommendations(url.searchParams.get('sessionKey'));
    if(route==='/api/installation'&&method==='GET')return visibleInstallation(store,service.resolveSession(url.searchParams.get('sessionKey')));
+   if(route==='/api/memory'&&method==='GET')return service.memoryStatus(url.searchParams.get('sessionKey'));
+   if(route==='/api/memory/consent'&&method==='POST'){exact(data,['sessionKey','enabled','selectedRoot']);const {sessionKey,...input}=data;return service.setMemoryConsent(sessionKey,input);}
    if(route==='/api/question/answer'&&method==='POST'){exact(data,['sessionKey','id','version','answer']);const {sessionKey,...reply}=data;return service.answer(sessionKey,reply);}
   },
   close(){broker.close();store.close();}
- };service.choices=createSkillChoices({store,broker,inventory:service.inventory,now});return service;
+ };service.choices=createSkillChoices({store,broker,inventory:service.inventory,now});return attachMemory(service);
 }

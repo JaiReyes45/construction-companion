@@ -10,6 +10,13 @@ export async function dispatchRpc({service,contextSecret,capability,data,signal}
  const active=service.store.read(origin,'active-turn');
  if(!active?.value.active||active.value.turnId!==origin.turnId)fail('CONFLICT','Native turn is not active');
  const input=data.input;
+ if(data.method.startsWith('memory_')){
+  const key=service.registerSession(origin);
+  if(data.method==='memory_status'){exact(input,[]);return service.memoryStatus(key);}
+  if(data.method==='memory_context')return service.memoryContext(key,input);
+  if(data.method==='memory_write')return service.memoryWrite(key,input);
+  fail('NOT_FOUND');
+ }
  if(data.method.startsWith('install_')){
   if(data.method==='install_prepare'&&capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};
   return handleInstallation(service,data.method,input,origin,{signal});
