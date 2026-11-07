@@ -10,6 +10,12 @@ export async function dispatchRpc({service,contextSecret,capability,data,signal}
  if(!active?.value.active||active.value.turnId!==origin.turnId)fail('CONFLICT','Native turn is not active');
  const input=data.input;
  if(data.method==='skill_context'){exact(input,['goal','role']);return {skills:await service.skillContext(service.registerSession(origin),input)};}
+ if(data.method==='choose_skill'){
+  exact(input,['taskId','role','candidates']);
+  if(capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};
+  return service.offerSkills(origin,input,{signal,timeoutMs:capability.questionMode==='verified-long'?600000:45000});
+ }
+ if(data.method==='reopen_skill'){exact(input,['taskId','role']);service.choices.reopen(origin,input);return {status:'reopened'};}
  if(data.method==='ask'){
   exact(input,['id','text','options','allowFreeText','timeoutMs']);
   if(capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};

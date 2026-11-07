@@ -3,6 +3,7 @@ import {scopeKey,fail,validateEvent,exact} from '../contracts.mjs';
 import {createQuestionBroker} from '../questions.mjs';
 import {dispatchRpc} from '../host/rpc.mjs';
 import {readInventory,skillContext} from '../skills/inventory.mjs';
+import {createSkillChoices} from '../skills/choices.mjs';
 import {fileURLToPath} from 'node:url';
 export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
  const handles=new Map();
@@ -12,6 +13,9 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
   store,now,memoryRoot,broker,
   inventory:()=>readInventory({roots:skillRoots,catalogPath}),
   async skillContext(sessionKey,input){service.resolveSession(sessionKey);return skillContext({skills:await service.inventory(),...input});},
+  offerSkills(origin,input,options){return service.choices.offer(origin,input,options);},
+  skillRecommendations(key){return service.choices.recommendations(service.resolveSession(key));},
+  bindings(key,taskId){return service.choices.bindings(service.resolveSession(key),taskId);},
   registerSession(s){
    const key=scopeKey(s),scope=JSON.parse(key),clean={projectId:scope[0],host:scope[1],sessionId:scope[2]};
    const old=store.read(clean,'session');if(old)return old.value.sessionKey;
@@ -47,8 +51,9 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
     finally{res.off('close',disconnected);}
    }
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
+   if(route==='/api/skills'&&method==='GET')return service.skillRecommendations(url.searchParams.get('sessionKey'));
    if(route==='/api/question/answer'&&method==='POST'){exact(data,['sessionKey','id','version','answer']);const {sessionKey,...reply}=data;return service.answer(sessionKey,reply);}
   },
   close(){broker.close();store.close();}
- };return service;
+ };service.choices=createSkillChoices({store,broker,inventory:service.inventory,now});return service;
 }
