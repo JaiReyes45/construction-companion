@@ -18,7 +18,7 @@ node bin/construction-companion.mjs install --host codex --project "$project"
 node bin/construction-companion.mjs install --host codex --project "$project" --apply
 ```
 
-Choose an existing project folder. The first install command previews the exact paths; the second applies them. Setup copies the package into the ignored `.construction-companion/codex` folder, preserves existing marketplace/config entries, and records its changes privately. Native registration creates one disabled user-wide entry. Only this project's `.codex/config.toml` enables it. Hook trust is never granted by the installer.
+Choose an existing project folder. The first install command previews the exact paths; the second applies them. Setup copies the package into the ignored `.construction-companion/codex` folder. Its own marketplace lives inside that copy at `.agents/plugins/marketplace.json` and has a project-specific name, so existing project marketplaces remain untouched. Setup preserves other config entries and records its changes privately. Native registration creates one disabled user-wide entry. Only this project's `.codex/config.toml` enables it. Hook trust is never granted by the installer.
 
 For a downloaded, extracted Codex package, run its `bin/construction-companion.mjs` and supply `--package "<extracted construction-companion folder>"` on the install command; its dependencies are already bundled. This project is not on npm: no `npx construction-companion` command is supported.
 

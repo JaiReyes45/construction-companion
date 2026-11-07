@@ -5,7 +5,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {privatePaths,projectIdentity,secureDirectory,writePrivateJson} from './lifecycle.mjs';
 import {fail} from './contracts.mjs';
-import {registerCodexPackage} from './host/codex-install.mjs';
+import {registerCodexPackage,disableCodexPackage} from './host/codex-install.mjs';
 const execute=promisify(execFile),digest=value=>createHash('sha256').update(value??'').digest('hex');
 async function read(file){try{return await readFile(file,'utf8')}catch(e){if(e.code==='ENOENT')return null;throw e;}}
 async function exists(file){try{await access(file);return true}catch{return false}}
@@ -26,14 +26,16 @@ export async function planInstall({host,projectRoot,packageRoot,receiptRoot}){
  if(!['codex','claude'].includes(host))fail('INVALID','Choose codex or claude');
  const identity=await projectIdentity(projectRoot);projectRoot=identity.root;receiptRoot??=(await privatePaths(projectRoot)).dataRoot;
  const packageStorage=path.join(projectRoot,'.construction-companion',host),marketName='construction-companion-'+identity.id.slice(0,12);
- const paths={...(host==='codex'?{config:path.join(projectRoot,'.codex/config.toml'),market:path.join(projectRoot,'.agents/plugins/marketplace.json')}:{}),ignore:path.join(projectRoot,'.gitignore')};
+ // A dedicated marketplace keeps native cache identity project-specific even
+ // when repositories already share an organization marketplace name.
+ const paths={...(host==='codex'?{config:path.join(projectRoot,'.codex/config.toml'),market:path.join(packageStorage,'.agents/plugins/marketplace.json')}:{}),ignore:path.join(projectRoot,'.gitignore')};
  for(const target of [...Object.values(paths),packageStorage])await assertProjectPath(projectRoot,target);
  const before=Object.fromEntries(await Promise.all(Object.entries(paths).map(async([key,file])=>[key,await read(file)])));
  let market=before.market?JSON.parse(before.market):{name:marketName,plugins:[]};
  if(!Array.isArray(market.plugins)||typeof market.name!=='string')fail('INVALID','Invalid existing project marketplace');
  if(host==='codex'&&(market.plugins.some(p=>p.name==='construction-companion')||before.config?.includes('construction-companion@'))||await exists(packageStorage))fail('CONFLICT','Companion already exists; remove or review it before replacing');
  const selector='construction-companion@'+market.name;
- const entry={name:'construction-companion',source:{source:'local',path:'./.construction-companion/codex'},policy:{installation:'AVAILABLE',authentication:'ON_INSTALL'},category:'Developer Tools'};
+ const entry={name:'construction-companion',source:{source:'local',path:'.'},policy:{installation:'AVAILABLE',authentication:'ON_INSTALL'},category:'Developer Tools'};
  const block=begin+'[plugins.'+JSON.stringify(selector)+']\nenabled = true\n'+end;
  const ignoreBlock=begin.replace('companion','companion '+host)+'/.construction-companion/\n'+end.replace('companion','companion '+host);
  const commands=host==='claude'?[{command:'claude',args:['plugin','marketplace','add',packageStorage]},{command:'claude',args:['plugin','install','construction-companion@'+marketName,'--scope','local']}]:[];
@@ -61,7 +63,9 @@ export async function applyInstall(plan,{run=execute,registerCodex=registerCodex
  }
  if(plan.host==='codex'){
   await saveFile('market',JSON.stringify({...plan.market,plugins:[...plan.market.plugins,plan.entry]},null,2)+'\n');
-  receipt.nativeRegistration=await registerCodex(plan);await writePrivateJson(receiptFile,receipt);
+  receipt.nativeRegistration=await registerCodex(plan,{beforeInstall:async()=>{
+   receipt.nativeRegistration={status:'pending',selector:plan.selector};await writePrivateJson(receiptFile,receipt);
+  }});await writePrivateJson(receiptFile,receipt);
   await saveFile('config',(plan.before.config??'')+(plan.before.config&&!plan.before.config.endsWith('\n')?'\n':'')+plan.block);
  }else{
   await mkdir(path.join(plan.packageStorage,'.claude-plugin'),{recursive:true});
@@ -75,12 +79,18 @@ export async function applyInstall(plan,{run=execute,registerCodex=registerCodex
  await writePrivateJson(projectFile,{...old,projectId:plan.projectId,hosts:[...new Set([...(old.hosts??[]),plan.host])],skillRoots:old.skillRoots??[]});
  receipt.status='installed';await writePrivateJson(receiptFile,receipt);return receipt;
 }
-export async function uninstall({receipt,run=execute}){
+export async function uninstall({receipt,run=execute,disableCodex=disableCodexPackage}){
  const {projectRoot,paths,host}=receipt,removed=[],preserved=[],conflicts=[];
  for(const target of Object.values(paths))await assertProjectPath(projectRoot,target);
  // First disable observation for this project even if edited native entries need manual review.
  const projectFile=path.join(receipt.receiptRoot,'project.json'),config=JSON.parse(await read(projectFile)??'{}');
  await writePrivateJson(projectFile,{...config,hosts:(config.hosts??[]).filter(h=>h!==host)});
+ if(host==='codex'&&receipt.nativeRegistration){
+  try{receipt.nativeRegistration={...receipt.nativeRegistration,...await disableCodex(receipt)};await writePrivateJson(path.join(receipt.receiptRoot,'install-codex.json'),receipt);}
+  catch{conflicts.push('Native activation is unverified for '+receipt.selector+'. Retry uninstall to disable this exact user-wide entry; recovery receipt retained.');}
+ }else if(host==='codex'&&receipt.status==='applying'&&receipt.owned.some(owned=>owned.kind==='market'&&owned.state==='written')){
+  conflicts.push('Legacy incomplete native setup for '+receipt.selector+' needs review in Codex; recovery receipt retained.');
+ }
  if(host==='claude'&&receipt.nativeInstalled){try{await run('claude',['plugin','uninstall','construction-companion@'+receipt.marketName,'--scope','local'],{cwd:projectRoot,windowsHide:true,shell:false,timeout:30000});removed.push('local Claude activation')}catch{conflicts.push('Claude removal failed; run its local plugin uninstall command.')}}
  for(const owned of receipt.owned){
   const current=await read(paths[owned.kind]);if(current===null)continue;let next=current;

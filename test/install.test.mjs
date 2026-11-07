@@ -6,6 +6,18 @@ import {temporaryDirectory} from './helpers.mjs';
 import {planInstall,applyInstall as applyActualInstall,uninstall} from '../src/install.mjs';
 const applyInstall=(plan,options={})=>applyActualInstall(plan,{registerCodex:async()=>{},...options});
 
+test('projects with a shared existing marketplace retain independent native identities',async t=>{
+ const root=temporaryDirectory(t),packageRoot=path.join(root,'package');await mkdir(packageRoot);
+ const plans=[];
+ for(const name of ['project-a','project-b']){
+  const projectRoot=path.join(root,name),original=JSON.stringify({name:'company-projects',plugins:[{name:'unrelated',source:{source:'local',path:'./unrelated'}}]});
+  const market=path.join(projectRoot,'.agents/plugins/marketplace.json');await mkdir(path.dirname(market),{recursive:true});await writeFile(market,original);
+  const plan=await planInstall({host:'codex',projectRoot,packageRoot,receiptRoot:path.join(root,name+'-private')});plans.push(plan);
+  await applyInstall(plan);assert.equal(await readFile(market,'utf8'),original,'Existing marketplace must stay unchanged');
+ }
+ assert.notEqual(plans[0].selector,plans[1].selector,'Project-bound MCP paths need independent native cache identities');
+});
+
 test('Codex setup registers the native package before enabling project activation',async t=>{
  const root=temporaryDirectory(t),projectRoot=path.join(root,'project'),packageRoot=path.join(root,'package');await mkdir(projectRoot);await mkdir(packageRoot);
  const plan=await planInstall({host:'codex',projectRoot,packageRoot,receiptRoot:path.join(root,'private')});let called=false;
