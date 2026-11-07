@@ -1,0 +1,10 @@
+{
+  "name": "construction-companion",
+  "version": "0.1.0-preview.1",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22.13.0"},
+  "scripts": {"test": "node --test test/*.test.mjs"},
+  "bin": {"construction-companion": "bin/construction-companion.mjs"},
+  "license": "MIT"
+}
