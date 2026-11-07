@@ -8,7 +8,7 @@ const statuses={INVALID:400,UNAUTHORIZED:401,FORBIDDEN:403,NOT_FOUND:404,CONFLIC
 const publicRoot=path.resolve(fileURLToPath(new URL('../public/',import.meta.url)));
 function authorized(header,token){const a=Buffer.from(header??''),b=Buffer.from('Bearer '+token);return a.length===b.length&&timingSafeEqual(a,b);}
 async function body(req){let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>65536)fail('LIMIT','Request exceeds 64 KiB');chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString());}catch{fail('INVALID','Invalid JSON');}}
-export async function startServer({service,tokens,port=0}){
+export async function startServer({service,tokens,port=0,control}){
  if(!tokens||typeof tokens.ingest!=='string'||typeof tokens.ui!=='string'||tokens.ingest===tokens.ui||tokens.ingest.length<32||tokens.ui.length<32)fail('INVALID','Separate strong credentials required');
  let origin;
  const server=createServer(async(req,res)=>{
@@ -19,11 +19,12 @@ export async function startServer({service,tokens,port=0}){
    if(req.headers.host!==new URL(origin).host)fail('FORBIDDEN','Invalid host');
    if(req.headers.origin&&req.headers.origin!==origin)fail('FORBIDDEN','Invalid origin');
    const url=new URL(req.url,origin),route=url.pathname;
-   if(route.startsWith('/api/')||route==='/ingest'||route==='/host/rpc'){
-    const hostRoute=route==='/ingest'||route==='/host/rpc';
+   if(route.startsWith('/api/')||route==='/ingest'||route==='/host/rpc'||route==='/host/control'){
+    const hostRoute=route==='/ingest'||route==='/host/rpc'||route==='/host/control';
     if(!authorized(req.headers.authorization,hostRoute?tokens.ingest:tokens.ui))fail('UNAUTHORIZED');
     if(req.method==='POST'&&!hostRoute&&req.headers.origin!==origin)fail('FORBIDDEN','Same-origin request required');
     const data=req.method==='POST'?await body(req):null;
+    if(route==='/host/control'&&req.method==='POST'&&control)return json(200,await control(data));
     if(route==='/ingest'&&req.method==='POST')return json(200,service.ingest(data));
     if(route==='/api/sessions'&&req.method==='GET')return json(200,service.sessions());
     if(route==='/api/events'&&req.method==='GET')return json(200,service.events(url.searchParams.get('sessionKey'),Number(url.searchParams.get('after')??0)));
