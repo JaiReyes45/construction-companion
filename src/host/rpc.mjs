@@ -1,6 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {verifyContext} from './context.mjs';
 import {exact,fail,id} from '../contracts.mjs';
+import {handleInstallation} from '../skills/installation-service.mjs';
 export async function dispatchRpc({service,contextSecret,capability,data,signal}){
  exact(data,['method','input','context','requestId']);
  if(!contextSecret)fail('UNSUPPORTED','No native context verifier configured');
@@ -9,6 +10,10 @@ export async function dispatchRpc({service,contextSecret,capability,data,signal}
  const active=service.store.read(origin,'active-turn');
  if(!active?.value.active||active.value.turnId!==origin.turnId)fail('CONFLICT','Native turn is not active');
  const input=data.input;
+ if(data.method.startsWith('install_')){
+  if(data.method==='install_prepare'&&capability.questionMode==='native-chat')return {status:'fallback',reason:'unsupported'};
+  return handleInstallation(service,data.method,input,origin,{signal});
+ }
  if(data.method==='skill_context'){exact(input,['goal','role']);return {skills:await service.skillContext(service.registerSession(origin),input)};}
  if(data.method==='choose_skill'){
   exact(input,['taskId','role','candidates']);

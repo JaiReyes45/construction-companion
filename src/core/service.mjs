@@ -4,13 +4,14 @@ import {createQuestionBroker} from '../questions.mjs';
 import {dispatchRpc} from '../host/rpc.mjs';
 import {readInventory,skillContext} from '../skills/inventory.mjs';
 import {createSkillChoices} from '../skills/choices.mjs';
+import {visibleInstallation} from '../skills/intents.mjs';
 import {fileURLToPath} from 'node:url';
-export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
+export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],installRecipes={},catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
  const handles=new Map();
  const broker=createQuestionBroker({store,now});broker.recover();
  for(const row of store.scan('session'))if(row.key==='session')handles.set(row.value.sessionKey,row.value.scope);
  const service={
-  store,now,memoryRoot,broker,
+  store,now,memoryRoot,broker,installRecipes,
   inventory:()=>readInventory({roots:skillRoots,catalogPath}),
   async skillContext(sessionKey,input){service.resolveSession(sessionKey);return skillContext({skills:await service.inventory(),...input});},
   offerSkills(origin,input,options){return service.choices.offer(origin,input,options);},
@@ -52,6 +53,7 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
    }
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
    if(route==='/api/skills'&&method==='GET')return service.skillRecommendations(url.searchParams.get('sessionKey'));
+   if(route==='/api/installation'&&method==='GET')return visibleInstallation(store,service.resolveSession(url.searchParams.get('sessionKey')));
    if(route==='/api/question/answer'&&method==='POST'){exact(data,['sessionKey','id','version','answer']);const {sessionKey,...reply}=data;return service.answer(sessionKey,reply);}
   },
   close(){broker.close();store.close();}
