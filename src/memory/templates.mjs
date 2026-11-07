@@ -1,0 +1,3 @@
+export const pages=Object.freeze({'index':'Index.md','project-brief':'Project Brief.md','decisions':'Decisions.md','open-questions':'Open Questions.md','artifacts':'Artifacts.md','workers/head-engineer':'Workers/Head Engineer.md','workers/architect':'Workers/Architect.md','workers/builder':'Workers/Builder.md','workers/inspector':'Workers/Inspector.md'});
+export const begin='<!-- companion:begin -->',end='<!-- companion:end -->';
+export function template(page,owner){return '---\ncompanion_project: '+owner+'\n---\n\n# '+pages[page].replace(/^Workers\//,'').replace(/\.md$/,'')+'\n\n'+begin+'\n'+end+'\n';}
