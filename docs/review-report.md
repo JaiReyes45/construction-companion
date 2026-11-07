@@ -2,6 +2,8 @@
 
 Verified on 2026-11-08 (Asia/Manila). Clean `npm ci --ignore-scripts` succeeded. The final frozen-source `node --test test/*.test.mjs` run passed **67/67** tests, including independent copied MCP packages and deterministic package hashes. SQLite emits Node's experimental-feature warning on the tested 22.16.0 runtime.
 
+[GitHub CI](https://github.com/JaiReyes45/construction-companion/actions/runs/42392894173) also passed on Windows and Ubuntu with Node 22.16.0 and 24. Final generated-package Codex registration, 13-tool discovery and a real status call passed in an isolated home. The status correctly reported native-chat fallback and unverified hooks. Both release archives passed ZIP integrity and private-marker/credential-pattern scans; all 111 tracked source files passed the same private-marker scan. These scans reduce accidental disclosure risk and are not a security audit.
+
 A fresh whole-branch code reviewer required changes before preview publication. Each finding below was reproduced before its fix and passed afterward. The demo and dual-host setup findings were regraded from Minor to Important because they broke documented preview workflows.
 
 | Finding | Fix and regression evidence |

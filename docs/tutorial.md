@@ -2,6 +2,8 @@
 
 The captioned tutorial records the actual local browser interface with **simulated host events**. It demonstrates browser behavior, not a verified native Codex or Claude session. The video is distributed as a preview release asset; the source repository keeps this transcript.
 
+[Watch or download the one-minute tutorial](https://github.com/JaiReyes45/construction-companion/releases/download/v0.1.0-preview.1/construction-companion-v2-tutorial.mp4) · [Download SRT captions](https://github.com/JaiReyes45/construction-companion/releases/download/v0.1.0-preview.1/construction-companion-v2-tutorial.srt)
+
 To try the same interaction, install source dependencies with `npm ci --ignore-scripts`, then run `node scripts/demo.mjs --copy-token`. Open the printed local URL, paste the copied token, and connect. The visible demo banner remains on screen. Ctrl+C stops the demonstration.
 
 ## Transcript

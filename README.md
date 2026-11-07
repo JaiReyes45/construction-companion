@@ -6,6 +6,10 @@ A tiny construction site beside your coding agent. You are the project owner; Su
 
 The companion makes no model API calls. Your coding host still runs the work and uses its normal subscription or API allowance. Selected workers are not independent models. Pixel animation uses local Canvas drawing.
 
+[Watch the captioned tutorial](https://github.com/JaiReyes45/construction-companion/releases/download/v0.1.0-preview.1/construction-companion-v2-tutorial.mp4) · [Preview downloads](https://github.com/JaiReyes45/construction-companion/releases/tag/v0.1.0-preview.1)
+
+![Construction Companion showing a clearly labelled simulated project](docs/demo-preview.png)
+
 ## Try the source preview
 
 For a guided local demonstration after installing dependencies, run `node scripts/demo.mjs --copy-token`. Open its URL and paste the copied token. The page visibly labels simulated questions and activity. Ctrl+C stops the demo. This path makes no coding-agent or model request.

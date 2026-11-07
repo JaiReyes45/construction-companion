@@ -1,0 +1,47 @@
+{
+  "release": "0.1.0-preview.1",
+  "status": "development-preview",
+  "testedDate": "2026-11-08",
+  "timezone": "Asia/Manila",
+  "sourceCommit": "9eb006bd47c87d6332723135ac9dfad8c487c163",
+  "packages": {
+    "codex": {
+      "treeSha256": "3c3b3abf68f1a7eb12f3f9f5e3d5cc0be775ba47c6165260adfbe16e90a1c714",
+      "zipSha256": "efae6e3f5a65783a2acc6796dc7eeb07246d91bbc6a3fa3ce888ca6b42019114"
+    },
+    "claude": {
+      "treeSha256": "89c0102da997f74021aa0a7276a50b21fe7c4c31132e27b425d06ac8ae51a221",
+      "zipSha256": "1b1310eb4722dfc982661efbdad6f5d8c835e23af68e7d76bb3aa784b4315544"
+    }
+  },
+  "nativeCodexProbe": {
+    "hostVersion": "0.155.1",
+    "platform": "win32",
+    "isolatedHome": true,
+    "modelRequests": 0,
+    "procedure": "Register final generated package with plugin add; start app-server with hooks feature enabled; inspect plugin/read and hooks/list; discover MCP tools and call companion_status.",
+    "registration": "passed",
+    "discoveredMcpTools": 13,
+    "statusCall": "passed",
+    "discoveredHooks": 0,
+    "questionMode": "native-chat",
+    "hooks": "unverified",
+    "connected": false,
+    "trustBypassUsed": false
+  },
+  "localTests": {"passed": 67, "failed": 0, "skipped": 0, "node": "22.16.0"},
+  "ci": {
+    "url": "https://github.com/JaiReyes45/construction-companion/actions/runs/42392894173",
+    "conclusion": "success",
+    "jobs": ["ubuntu-latest / 22.16.0", "ubuntu-latest / 24", "windows-latest / 22.16.0", "windows-latest / 24"],
+    "kind": "automated-fixtures"
+  },
+  "remainingGates": [
+    "Native hook discovery, trust and delivery",
+    "Ordinary-prompt Superpowers discovery",
+    "Browser answer roundtrip to the originating native request",
+    "Native third-party skill installation and reload",
+    "Claude Code native acceptance",
+    "Linux native coding-host acceptance"
+  ]
+}
