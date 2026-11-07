@@ -7,9 +7,11 @@ import {startProject,stopProject,probeProject,privatePaths,readLaunch} from './l
 import {planInstall,applyInstall,uninstall} from './install.mjs';
 import {inspectHost} from './compat.mjs';
 import {readInventory} from './skills/inventory.mjs';
+import {configureSkillRoots,nodeSupported} from './configuration.mjs';
+import {resolveHostCapability} from './host/capabilities.mjs';
 const execute=promisify(execFile);
 const sourceRoot=fileURLToPath(new URL('../',import.meta.url));
-const help=`Construction Companion — local preview\n\nUse node bin/construction-companion.mjs <command> --project <folder>\n\ninstall --host codex|claude [--package <built package>] [--apply]\nstart                         Start the private local runner\nconnect [--copy-token]         Show local URL; explicitly copy token\ndoctor --host codex|claude     Check dependencies and compatibility\nstop                          Stop without deleting project data\nuninstall --host codex|claude Remove owned project activation\n\nBuild packages first: node scripts/build-packages.mjs\nQuestion delivery remains in native chat until native acceptance is verified.\n`;
+const help=`Construction Companion — local coding companion\n\nUse node bin/construction-companion.mjs <command> --project <folder>\n\ninstall --host codex|claude [--package <built package>] [--apply]\nconfigure --skill-root <folder> Add skill collections (repeat for multiple roots)\nstart                         Start the private local runner\nconnect [--copy-token]         Show local URL; explicitly copy token\ndoctor --host codex|claude     Check dependencies and compatibility\nstop                          Stop without deleting project data\nuninstall --host codex|claude Remove owned project activation\n\nBuild packages first: node scripts/build-packages.mjs\nReview native hook trust in your host. Unsupported host versions use native chat.\n`;
 export async function copyToken(value){
  const command=process.platform==='win32'?'powershell.exe':process.platform==='darwin'?'pbcopy':'xclip';
  const args=process.platform==='win32'?['-NoProfile','-NonInteractive','-Command','$input | Set-Clipboard']:process.platform==='darwin'?[]:['-selection','clipboard'];
@@ -26,12 +28,14 @@ export async function doctor({projectRoot,host,run=execute}){
   }
  }catch(e){if(e.code!=='ENOENT')storage={status:'inaccessible'};}
  const inventory=await readInventory({roots:config?.skillRoots??[],catalogPath:path.join(sourceRoot,'catalog/skills.json')});
- return {node:{version:process.versions.node,status:Number(process.versions.node.split('.')[0])>=22?'available':'upgrade-required'},host:capability,service:await probeProject({projectRoot,paths}),storage,superpowers:{status:inventory.some(s=>s.availability==='installed'&&/superpowers|brainstorming|using-superpowers/i.test(s.name+' '+s.id))?'discovered':'not-configured',action:'Install genuine Superpowers in your coding host; add explicit skill roots during project configuration.'},questions:{status:'unverified',mode:'native-chat',reason:'No matching native-host question receipt is shipped with this preview.'},checkedAt:new Date().toISOString()};
+ const supported=resolveHostCapability(capability),service=await probeProject({projectRoot,paths});
+ const connected=service.status==='running'&&config?.hosts?.includes(host);
+ return {node:{version:process.versions.node,status:nodeSupported(process.versions.node)?'available':'upgrade-required'},host:{...capability,compatibility:supported},service,storage,superpowers:{status:inventory.some(s=>s.availability==='installed'&&/superpowers|brainstorming|using-superpowers/i.test(s.name+' '+s.id))?'discovered':'not-configured',action:'Install genuine Superpowers in your host; use configure --skill-root with its skills collection folder.'},questions:{status:supported.questionMode==='native-chat'?'unverified':connected?'compatible':'not-connected',mode:connected?supported.questionMode:'native-chat',reason:supported.questionMode==='native-chat'?'This host version and platform have no matching native acceptance receipt.':'Review hook trust and project trust in Codex, restart the host, and connect the local page. Version compatibility alone does not prove trust is enabled.'},checkedAt:new Date().toISOString()};
 }
 export async function runCli(argv,{run=execute,stdout=process.stdout,stderr=process.stderr,clipboard=copyToken}={}){
  try{
   const [command='help',...rest]=argv,options={};
-  for(let i=0;i<rest.length;i++){const flag=rest[i];if(['--apply','--copy-token'].includes(flag))options[flag.slice(2)]=true;else if(['--host','--project','--package'].includes(flag)){if(!rest[i+1]||rest[i+1].startsWith('--'))throw Error('Missing value for '+flag);options[flag.slice(2)]=rest[++i];}else throw Error('Unknown option '+flag);}
+  for(let i=0;i<rest.length;i++){const flag=rest[i];if(['--apply','--copy-token'].includes(flag))options[flag.slice(2)]=true;else if(['--host','--project','--package','--skill-root'].includes(flag)){if(!rest[i+1]||rest[i+1].startsWith('--'))throw Error('Missing value for '+flag);const value=rest[++i];if(flag==='--skill-root')(options.skillRoots??=[]).push(value);else options[flag.slice(2)]=value;}else throw Error('Unknown option '+flag);}
   const print=value=>stdout.write(typeof value==='string'?value+'\n':JSON.stringify(value,null,2)+'\n');
   if(['help','--help','-h'].includes(command)){stdout.write(help);return 0;}
   const projectRoot=path.resolve(options.project??process.cwd()),host=options.host??'codex';
@@ -39,6 +43,9 @@ export async function runCli(argv,{run=execute,stdout=process.stdout,stderr=proc
   if(command==='start'){print(await startProject({projectRoot}));return 0;}
   if(command==='stop'){await stopProject({projectRoot});print('Local runner stopped. Project history and notes retained.');return 0;}
   if(command==='doctor'){print(await doctor({projectRoot,host,run}));return 0;}
+  if(command==='configure'){
+   const paths=await privatePaths(projectRoot);print(await configureSkillRoots({dataRoot:paths.dataRoot,roots:options.skillRoots}));print('Skill collections saved. Stop and start the local runner to reload them.');return 0;
+  }
   if(command==='connect'){
    const paths=await privatePaths(projectRoot),status=await probeProject({projectRoot,paths});if(status.status!=='running')throw Error('Start the local runner first.');
    print(status.origin);if(options['copy-token']){await clipboard((await readLaunch(paths)).tokens.ui);print('Connection token copied to your clipboard. Paste it in the local page.');}else print('Run connect with --copy-token to copy the connection token.');return 0;

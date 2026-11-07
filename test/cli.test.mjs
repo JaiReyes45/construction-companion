@@ -6,6 +6,7 @@ import {runCli} from '../src/cli.mjs';
 test('help, invalid flags and doctor are explicit and do not reveal connection credentials',async t=>{
  const root=temporaryDirectory(t),output=[],errors=[],stdout={write:x=>output.push(x)},stderr={write:x=>errors.push(x)};
  assert.equal(await runCli(['help'],{stdout,stderr}),0);assert.ok(output.join('').includes('copy-token'));
+ assert.ok(output.join('').includes('configure --skill-root'));
  assert.equal(await runCli(['start','--bogus'],{stdout,stderr}),1);
  output.length=0;
  const run=async()=>{throw Error('missing')};

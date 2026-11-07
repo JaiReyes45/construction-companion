@@ -10,7 +10,7 @@ const notice=text=>{$('notice').textContent=text;};
 function render(snapshot){
  lastSnapshot=snapshot;const vm=makeViewModel({...snapshot,connected:online});
  if($('status-text').textContent!==vm.statusText)$('status-text').textContent=vm.statusText;
- $('native-permission').hidden=!vm.permission;
+ $('native-permission').hidden=!vm.permission;$('native-permission').textContent=vm.permissionText;
  $('installation').hidden=!vm.installationText;$('installation').textContent=vm.installationText;
  $('activity-label').textContent=vm.tasks.some(t=>t.status==='working'&&t.evidence==='observed')?'Observed work in progress':'Crew standing by';
  const completed=vm.tasks.filter(t=>t.status==='completed').length;$('completion-count').textContent=completed+' observed task'+(completed===1?'':'s')+' completed';

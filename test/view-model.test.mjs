@@ -8,6 +8,12 @@ test('native permissions expose a return instruction and no browser approval',()
  const vm=makeViewModel({...base,scene:{...base.scene,permissions:{p:{status:'waiting'}}}});
  assert.ok(vm.statusText.includes('native'));assert.ok(!vm.actions.some(a=>['approve','execute-command'].includes(a.id)));
 });
+
+test('native permission without a tool ID does not falsely report a pending approval during a live question',()=>{
+ const vm=makeViewModel({...base,scene:{...base.scene,permissions:{'native-permission':{id:'native-permission',status:'waiting'}}},question:{status:'open',options:[]}});
+ assert.equal(vm.statusText,'Your head engineer has a question.');
+ assert.ok(vm.permissionText.includes('current status'));assert.ok(!vm.permissionText.includes('Waiting'));
+});
 test('question state disables stale/offline actions and preserves text as data',()=>{
  const question={id:'q',version:1,status:'open',text:'Audience?',options:[{id:'x',label:'<script>alert(1)</script>'}],allowFreeText:true};
  const vm=makeViewModel({...base,question});assert.equal(vm.actions[0].label,question.options[0].label);assert.equal(vm.actions[0].enabled,true);

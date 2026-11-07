@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile,access} from 'node:fs/promises';
 import path from 'node:path';
 import {temporaryDirectory} from './helpers.mjs';
-import {planInstall,applyInstall,uninstall} from '../src/install.mjs';
+import {planInstall,applyInstall as applyActualInstall,uninstall} from '../src/install.mjs';
+const applyInstall=(plan,options={})=>applyActualInstall(plan,{registerCodex:async()=>{},...options});
+
+test('Codex setup registers the native package before enabling project activation',async t=>{
+ const root=temporaryDirectory(t),projectRoot=path.join(root,'project'),packageRoot=path.join(root,'package');await mkdir(projectRoot);await mkdir(packageRoot);
+ const plan=await planInstall({host:'codex',projectRoot,packageRoot,receiptRoot:path.join(root,'private')});let called=false;
+ await applyInstall(plan,{registerCodex:async actual=>{called=true;assert.equal(actual.selector,plan.selector);assert.ok((await readFile(actual.paths.market,'utf8')).includes('construction-companion'));await assert.rejects(()=>readFile(actual.paths.config),{code:'ENOENT'});}});
+ assert.equal(called,true,'Native registration must run, not only project config edits');
+});
 test('Codex setup is project scoped, previews without writes, and removal preserves unrelated settings',async t=>{
  const root=temporaryDirectory(t),projectRoot=path.join(root,'project with spaces'),packageRoot=path.join(root,'package'),receiptRoot=path.join(root,'private');
  await mkdir(path.join(projectRoot,'.codex'),{recursive:true});await mkdir(path.join(packageRoot,'.codex-plugin'),{recursive:true});await writeFile(path.join(packageRoot,'.codex-plugin/plugin.json'),JSON.stringify({name:'construction-companion',version:'0.1.0-preview.1'}));

@@ -5,9 +5,18 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {privatePaths,projectIdentity,secureDirectory,writePrivateJson} from './lifecycle.mjs';
 import {fail} from './contracts.mjs';
+import {registerCodexPackage} from './host/codex-install.mjs';
 const execute=promisify(execFile),digest=value=>createHash('sha256').update(value??'').digest('hex');
 async function read(file){try{return await readFile(file,'utf8')}catch(e){if(e.code==='ENOENT')return null;throw e;}}
 async function exists(file){try{await access(file);return true}catch{return false}}
+export async function bindCodexMcp(packageStorage){
+ const filename=path.join(packageStorage,'mcp.json'),text=await read(filename);if(text===null)return;
+ const config=JSON.parse(text),server=config.mcpServers?.['construction-companion'];if(!server)fail('INVALID','Codex package has no companion MCP entry');
+ // The legacy Codex loader resolves cwd but does not expand PLUGIN_ROOT in args.
+ // Bind the retained project copy; keep the host session cwd for project identity.
+ server.command=process.execPath;server.args=[path.join(packageStorage,'bin/mcp.mjs'),'--host','codex'];delete server.cwd;
+ await writeFile(filename,JSON.stringify(config,null,2)+'\n');
+}
 const begin='# BEGIN construction-companion\n',end='# END construction-companion\n';
 async function assertProjectPath(root,target){
  const relative=path.relative(root,target);if(relative==='..'||relative.startsWith('..'+path.sep)||path.isAbsolute(relative))fail('INVALID','Setup path is outside the project');
@@ -28,9 +37,9 @@ export async function planInstall({host,projectRoot,packageRoot,receiptRoot}){
  const block=begin+'[plugins.'+JSON.stringify(selector)+']\nenabled = true\n'+end;
  const ignoreBlock=begin.replace('companion','companion '+host)+'/.construction-companion/\n'+end.replace('companion','companion '+host);
  const commands=host==='claude'?[{command:'claude',args:['plugin','marketplace','add',packageStorage]},{command:'claude',args:['plugin','install','construction-companion@'+marketName,'--scope','local']}]:[];
- return {host,projectRoot,projectId:identity.id,packageRoot:path.resolve(packageRoot),packageStorage,receiptRoot,activationScope:host==='claude'?'local':'project',marketName,selector,paths,before,hashes:Object.fromEntries(Object.entries(before).map(([k,v])=>[k,digest(v)])),market,entry,block,ignoreBlock,commands,notice:'Review native hooks and restart the coding host. Game question delivery is unverified; native-chat fallback is active.'};
+ return {host,projectRoot,projectId:identity.id,packageRoot:path.resolve(packageRoot),packageStorage,receiptRoot,activationScope:host==='claude'?'local':'project',marketName,selector,paths,before,hashes:Object.fromEntries(Object.entries(before).map(([k,v])=>[k,digest(v)])),market,entry,block,ignoreBlock,commands,notice:host==='codex'?'Registers a native cache package and one disabled user-wide entry; enables only this project. Review project trust and native hooks, restart Codex, and run doctor for supported versions.':'Review native hooks and restart Claude. Native Claude question delivery is unverified; fallback stays in host chat.'};
 }
-export async function applyInstall(plan,{run=execute}={}){
+export async function applyInstall(plan,{run=execute,registerCodex=registerCodexPackage}={}){
  for(const [key,file]of Object.entries(plan.paths)){await assertProjectPath(plan.projectRoot,file);if(digest(await read(file))!==plan.hashes[key])fail('CONFLICT','Project settings changed since preview');}
  await assertProjectPath(plan.projectRoot,plan.packageStorage);
  if(await exists(plan.packageStorage))fail('CONFLICT','Package destination already exists');
@@ -38,6 +47,7 @@ export async function applyInstall(plan,{run=execute}={}){
  const receiptFile=path.join(plan.receiptRoot,'install-'+plan.host+'.json');if(await exists(receiptFile))fail('CONFLICT','An existing install receipt needs review');
  const receipt={...plan,status:'applying',owned:[]};await writePrivateJson(receiptFile,receipt);
  await mkdir(path.dirname(plan.packageStorage),{recursive:true});await cp(plan.packageRoot,plan.packageStorage,{recursive:true,dereference:true,errorOnExist:true,force:false});
+ if(plan.host==='codex')await bindCodexMcp(plan.packageStorage);
  async function saveFile(kind,text){
   const file=plan.paths[kind];await assertProjectPath(plan.projectRoot,file);
   if(digest(await read(file))!==plan.hashes[kind])fail('CONFLICT','Project settings changed during installation; edits preserved');
@@ -51,6 +61,7 @@ export async function applyInstall(plan,{run=execute}={}){
  }
  if(plan.host==='codex'){
   await saveFile('market',JSON.stringify({...plan.market,plugins:[...plan.market.plugins,plan.entry]},null,2)+'\n');
+  receipt.nativeRegistration=await registerCodex(plan);await writePrivateJson(receiptFile,receipt);
   await saveFile('config',(plan.before.config??'')+(plan.before.config&&!plan.before.config.endsWith('\n')?'\n':'')+plan.block);
  }else{
   await mkdir(path.join(plan.packageStorage,'.claude-plugin'),{recursive:true});
