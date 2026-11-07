@@ -8,6 +8,8 @@ The companion makes no model API calls. Your coding host still runs the work and
 
 ## Try the source preview
 
+For a guided local demonstration after installing dependencies, run `node scripts/demo.mjs --copy-token`. Open its URL and paste the copied token. The page visibly labels simulated questions and activity. Ctrl+C stops the demo. This path makes no coding-agent or model request.
+
 Prerequisites: Node.js 22.13 or newer (22.16 tested), npm, Git, and your chosen coding host. Install genuine [Superpowers](https://github.com/obra/superpowers) through that host if you want it to guide the workflow. Obsidian is optional.
 
 ```sh

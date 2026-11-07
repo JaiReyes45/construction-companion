@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-08T00:00:00+08:00",
+  "title": "Design System: Construction Companion",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#F5F0E6",
+        "tonalRamp": [
+          "oklch(15% 0.026 82)",
+          "oklch(26% 0.026 82)",
+          "oklch(38% 0.026 82)",
+          "oklch(49% 0.026 82)",
+          "oklch(61% 0.026 82)",
+          "oklch(72% 0.026 82)",
+          "oklch(84% 0.026 82)",
+          "oklch(95% 0.026 82)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#24211D",
+        "tonalRamp": [
+          "oklch(15% 0.012 76)",
+          "oklch(26% 0.012 76)",
+          "oklch(38% 0.012 76)",
+          "oklch(49% 0.012 76)",
+          "oklch(61% 0.012 76)",
+          "oklch(72% 0.012 76)",
+          "oklch(84% 0.012 76)",
+          "oklch(95% 0.012 76)"
+        ]
+      },
+      "orange": {
+        "role": "primary",
+        "displayName": "Orange",
+        "canonical": "#C35A21",
+        "tonalRamp": [
+          "oklch(15% 0.15 46)",
+          "oklch(26% 0.15 46)",
+          "oklch(38% 0.15 46)",
+          "oklch(49% 0.15 46)",
+          "oklch(61% 0.15 46)",
+          "oklch(72% 0.15 46)",
+          "oklch(84% 0.15 46)",
+          "oklch(95% 0.15 46)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Action",
+        "canonical": "#B84E19",
+        "tonalRamp": [
+          "oklch(15% 0.15 43)",
+          "oklch(26% 0.15 43)",
+          "oklch(38% 0.15 43)",
+          "oklch(49% 0.15 43)",
+          "oklch(61% 0.15 43)",
+          "oklch(72% 0.15 43)",
+          "oklch(84% 0.15 43)",
+          "oklch(95% 0.15 43)"
+        ]
+      },
+      "action-hover": {
+        "role": "primary",
+        "displayName": "Action Hover",
+        "canonical": "#9D4215",
+        "tonalRamp": [
+          "oklch(15% 0.14 42)",
+          "oklch(26% 0.14 42)",
+          "oklch(38% 0.14 42)",
+          "oklch(49% 0.14 42)",
+          "oklch(61% 0.14 42)",
+          "oklch(72% 0.14 42)",
+          "oklch(84% 0.14 42)",
+          "oklch(95% 0.14 42)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#635B50",
+        "tonalRamp": [
+          "oklch(15% 0.025 75)",
+          "oklch(26% 0.025 75)",
+          "oklch(38% 0.025 75)",
+          "oklch(49% 0.025 75)",
+          "oklch(61% 0.025 75)",
+          "oklch(72% 0.025 75)",
+          "oklch(84% 0.025 75)",
+          "oklch(95% 0.025 75)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#FFFDF7",
+        "tonalRamp": [
+          "oklch(15% 0.018 90)",
+          "oklch(26% 0.018 90)",
+          "oklch(38% 0.018 90)",
+          "oklch(49% 0.018 90)",
+          "oklch(61% 0.018 90)",
+          "oklch(72% 0.018 90)",
+          "oklch(84% 0.018 90)",
+          "oklch(95% 0.018 90)"
+        ]
+      },
+      "boundary": {
+        "role": "neutral",
+        "displayName": "Boundary",
+        "canonical": "#D8CDBD",
+        "tonalRamp": [
+          "oklch(15% 0.03 75)",
+          "oklch(26% 0.03 75)",
+          "oklch(38% 0.03 75)",
+          "oklch(49% 0.03 75)",
+          "oklch(61% 0.03 75)",
+          "oklch(72% 0.03 75)",
+          "oklch(84% 0.03 75)",
+          "oklch(95% 0.03 75)"
+        ]
+      },
+      "field-boundary": {
+        "role": "neutral",
+        "displayName": "Field Boundary",
+        "canonical": "#A99A86",
+        "tonalRamp": [
+          "oklch(15% 0.035 70)",
+          "oklch(26% 0.035 70)",
+          "oklch(38% 0.035 70)",
+          "oklch(49% 0.035 70)",
+          "oklch(61% 0.035 70)",
+          "oklch(72% 0.035 70)",
+          "oklch(84% 0.035 70)",
+          "oklch(95% 0.035 70)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Notebook display",
+        "purpose": "Connection introduction."
+      },
+      "headline": {
+        "displayName": "Section heading",
+        "purpose": "Scannable work sections."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "scene-motion",
+        "value": "local Canvas frames",
+        "purpose": "Observed work only; pause for hidden/offline/reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "single-workspace",
+        "value": "850px"
+      },
+      {
+        "name": "stacked-controls",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Confirm a local form action.",
+      "html": "<button class=\"ds-primary\">Connect</button>",
+      "css": ".ds-primary{background:var(--action,#B84E19);color:white;border:1px solid transparent;border-radius:8px;padding:10px 18px;min-height:44px;font:650 16px system-ui;cursor:pointer}.ds-primary:hover{background:#9D4215}.ds-primary:focus-visible{outline:3px solid var(--orange,#C35A21);outline-offset:3px}.ds-primary:disabled{opacity:.55}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A reversible secondary action.",
+      "html": "<button class=\"ds-secondary\">Pause motion</button>",
+      "css": ".ds-secondary{background:transparent;color:var(--ink,#24211D);border:1px solid var(--line,#D8CDBD);border-radius:8px;padding:10px 18px;min-height:44px;font:650 16px system-ui}.ds-secondary:hover{background:#e9e0d1}.ds-secondary:focus-visible{outline:3px solid var(--orange,#C35A21);outline-offset:3px}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A labelled user response.",
+      "html": "<label class=\"ds-field\">Your answer<input placeholder=\"Write an answer\"></label>",
+      "css": ".ds-field{display:block;color:var(--ink,#24211D);font:650 14px system-ui}.ds-field input{display:block;margin-top:8px;padding:10px 12px;border:1px solid #A99A86;border-radius:6px;min-height:44px;background:var(--surface,#FFFDF7);color:var(--ink,#24211D);font:16px system-ui}.ds-field input:focus-visible{outline:3px solid var(--orange,#C35A21);outline-offset:3px}.ds-field input::placeholder{color:var(--muted,#635B50)}"
+    },
+    {
+      "name": "Engineer panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Readable question context next to the decorative site.",
+      "html": "<section class=\"ds-panel\"><h2>Head engineer</h2><p>Your coding session has a question.</p></section>",
+      "css": ".ds-panel{background:var(--surface,#FFFDF7);color:var(--ink,#24211D);border-radius:12px;padding:24px}.ds-panel h2{font:500 24px Georgia,serif;margin:0 0 16px}.ds-panel p{font:16px/1.6 system-ui;margin:0}"
+    },
+    {
+      "name": "Brand navigation",
+      "kind": "nav",
+      "description": "Compact notebook-like identity.",
+      "html": "<a class=\"ds-brand\" href=\"#\">Construction<br>Companion</a>",
+      "css": ".ds-brand{display:inline-block;color:var(--ink,#24211D);font:20px/1.05 Georgia,serif;text-decoration:none}.ds-brand:focus-visible{outline:3px solid var(--orange,#C35A21);outline-offset:3px}.ds-brand:hover{text-decoration:underline;text-underline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The construction notebook",
+    "overview": "Retain the owner's warm paper, dark ink and construction-orange world. Clear forms and a readable notebook sit beside original pixel workers. The interface supports work; the small scene supplies character.",
+    "keyCharacteristics": [
+      "Warm, flat surfaces with restrained boundaries.",
+      "Readable serif headings and ordinary sans-serif controls.",
+      "Original CC0 pixel workers with evidence-driven local motion."
+    ],
+    "rules": [],
+    "dos": [
+      "Do retain the owner-approved paper, ink and construction-orange palette.",
+      "Do keep questions, actions and real task evidence readable outside the canvas.",
+      "Do preserve native permission authority and clear offline states."
+    ],
+    "donts": [
+      "Don't invent completion percentages or running workers from a selection alone.",
+      "Don't make motion necessary to understand the project."
+    ]
+  }
+}
