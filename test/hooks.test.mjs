@@ -47,3 +47,10 @@ test('offline spool preserves IDs, retries failures and bounds overflow',async t
  const recovered=[];await drainSpool({directory,send:async e=>recovered.push(e)});
  assert.ok(recovered.some(e=>e.type==='history.gap'));
 });
+
+test('replay drains events in observed order and native interrupt ends its turn',async t=>{
+ const directory=temporaryDirectory(t),sent=[];
+ for(let i=0;i<12;i++)appendSpool({directory,event:event({eventId:'ordered-'+i,sequence:i})});
+ await drainSpool({directory,send:async e=>sent.push(e.sequence)});assert.deepEqual(sent,Array.from({length:12},(_,i)=>i));
+ assert.equal(normalizeHook('codex',{hook_event_name:'Interrupt',session_id:'s',turn_id:'t'},{projectId:'p'}).type,'turn.end');
+});

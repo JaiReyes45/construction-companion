@@ -18,7 +18,7 @@ export async function openVault({root,projectId,captureEnabled=false}){
   const file=filename(page);if(!existsSync(file))fail('NOT_FOUND','Page not created');
   confined(file);if(statSync(file).size>131072)fail('LIMIT','Project page exceeds read limit');
   const content=readFileSync(file,'utf8');
-  if(!content.startsWith('---\ncompanion_project: '+owner+'\n')||!content.includes(begin)||!content.includes(end))fail('CONFLICT','This page is not companion-owned');
+  if(!content.replaceAll('\r\n','\n').startsWith('---\ncompanion_project: '+owner+'\n')||!content.includes(begin)||!content.includes(end))fail('CONFLICT','This page is not companion-owned');
   return {content,hash:hash(content)};
  }
  const vault={
@@ -40,7 +40,9 @@ export async function openVault({root,projectId,captureEnabled=false}){
     const original=old?.content??template(input.page,owner),start=original.indexOf(begin),finish=original.indexOf(end,start);
     if(finish<start||original.indexOf(begin,start+begin.length)>=0)fail('CONFLICT','Managed markers were edited');
     const content=original.slice(0,start)+begin+'\n'+operation+'\n'+input.content+'\n'+original.slice(finish);
-    if(old){const backup=path.join(root,'.companion-backups');mkdirSync(backup,{recursive:true,mode:0o700});confined(backup);writeFileSync(path.join(backup,old.hash+'.md'),old.content,{mode:0o600});}
+    if(old){const backup=path.join(root,'.companion-backups');mkdirSync(backup,{recursive:true,mode:0o700});confined(backup);const target=path.join(backup,old.hash+'.md');
+     try{writeFileSync(target,old.content,{mode:0o600,flag:'wx'})}catch(e){if(e.code!=='EEXIST')throw e;confined(target);if(readFileSync(target,'utf8')!==old.content)fail('CONFLICT','Existing backup differs; review it before saving');}
+    }
     temp=file+'.'+randomUUID()+'.tmp';writeFileSync(temp,content,{mode:0o600,flag:'wx'});
     const latest=existsSync(file)?readOwned(input.page):null;
     if((latest?.hash??null)!==(old?.hash??null))return {status:'conflict',currentHash:latest?.hash??null};

@@ -31,3 +31,14 @@ test('concurrent writes cannot both consume the same hash',async t=>{
  const results=await Promise.allSettled([a,b].map((vault,i)=>vault.write({page:'decisions',expectedHash:first.hash,operationId:'op'+i,content:'Choice '+i})));
  assert.equal(results.filter(r=>r.status==='fulfilled'&&r.value.status==='written').length,1);
 });
+
+test('CRLF editor saves remain owned and prior backup files are never overwritten',async t=>{
+ const root=temporaryDirectory(t),vault=await openVault({root,projectId:'p',captureEnabled:true});
+ await vault.write({page:'decisions',expectedHash:null,operationId:'1',content:'Initial'});
+ const file=path.join(root,'Decisions.md');writeFileSync(file,readFileSync(file,'utf8').replaceAll('\n','\r\n'));
+ const old=await vault.read('decisions'),backup=path.join(root,'.companion-backups');mkdirSync(backup);
+ writeFileSync(path.join(backup,old.hash+'.md'),'Existing backup must survive');
+ await assert.rejects(()=>vault.write({page:'decisions',expectedHash:old.hash,operationId:'2',content:'Changed'}),/backup/i);
+ assert.equal(readFileSync(path.join(backup,old.hash+'.md'),'utf8'),'Existing backup must survive');
+ assert.equal((await vault.read('decisions')).hash,old.hash);
+});

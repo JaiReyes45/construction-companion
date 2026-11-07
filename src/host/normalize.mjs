@@ -1,6 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {validateEvent} from '../contracts.mjs';
-const map={SessionStart:'session.start',SessionEnd:'session.end',UserPromptSubmit:'turn.start',Stop:'turn.end',StopFailure:'turn.end',PreToolUse:'task.start',PostToolUse:'task.verify',PostToolUseFailure:'task.fail',SubagentStart:'actor.start',SubagentStop:'actor.end',PermissionRequest:'permission.wait',TaskCreated:'task.start',TaskCompleted:'task.complete'};
+const map={SessionStart:'session.start',SessionEnd:'session.end',UserPromptSubmit:'turn.start',Stop:'turn.end',StopFailure:'turn.end',Interrupt:'turn.end',PreToolUse:'task.start',PostToolUse:'task.verify',PostToolUseFailure:'task.fail',SubagentStart:'actor.start',SubagentStop:'actor.end',PermissionRequest:'permission.wait',TaskCreated:'task.start',TaskCompleted:'task.complete'};
 export function normalizeHook(host,raw,context){
  const type=map[raw?.hook_event_name];if(!type)return null;
  if(!['codex','claude'].includes(host))return null;
