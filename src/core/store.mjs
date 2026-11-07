@@ -4,6 +4,7 @@ export function openStore(databasePath) {
  const db=new DatabaseSync(databasePath);
  db.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');
  db.exec('CREATE TABLE IF NOT EXISTS events(cursor INTEGER PRIMARY KEY AUTOINCREMENT, scope TEXT NOT NULL, id TEXT NOT NULL, body TEXT NOT NULL, UNIQUE(scope,id)); CREATE TABLE IF NOT EXISTS state(scope TEXT NOT NULL,key TEXT NOT NULL,version INTEGER NOT NULL,body TEXT NOT NULL,PRIMARY KEY(scope,key)); PRAGMA user_version=1;');
+ db.exec('CREATE INDEX IF NOT EXISTS events_scope_cursor ON events(scope,cursor);');
  let depth=0;
  const store={
   transaction(fn){

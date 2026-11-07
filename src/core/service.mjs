@@ -6,9 +6,11 @@ import {readInventory,skillContext} from '../skills/inventory.mjs';
 import {createSkillChoices} from '../skills/choices.mjs';
 import {visibleInstallation} from '../skills/intents.mjs';
 import {attachMemory} from '../memory/service.mjs';
+import {emptyScene,applyEvent} from '../../public/projection.mjs';
 import {fileURLToPath} from 'node:url';
 export function createService({store,now=Date.now,memoryRoot,contextSecret,capability={questionMode:'native-chat'},skillRoots=[],installRecipes={},catalogPath=fileURLToPath(new URL('../../catalog/skills.json',import.meta.url))}){
  const handles=new Map();
+ const scenes=new Map();
  const broker=createQuestionBroker({store,now});broker.recover();
  for(const row of store.scan('session'))if(row.key==='session')handles.set(row.value.sessionKey,row.value.scope);
  const service={
@@ -44,6 +46,11 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
   },
   sessions(){return [...handles].map(([sessionKey,s])=>({sessionKey,host:s.host,status:store.read(s,'session').value.status}));},
   events(key,after=0){return store.list(service.resolveSession(key),{after});},
+  scene(key){
+   const scope=service.resolveSession(key);let state=scenes.get(key)??emptyScene();
+   for(;;){const batch=store.list(scope,{after:state.cursor});if(!batch.length)break;state=batch.reduce(applyEvent,state);}
+   scenes.set(key,state);return state;
+  },
   ask(input,options){service.registerSession(input);return broker.ask(input,options);},
   question(key){return broker.get(service.resolveSession(key));},
   answer(sessionKey,data){
@@ -60,6 +67,7 @@ export function createService({store,now=Date.now,memoryRoot,contextSecret,capab
     finally{res.off('close',disconnected);}
    }
    if(route==='/api/question'&&method==='GET')return service.question(url.searchParams.get('sessionKey'));
+   if(route==='/api/scene'&&method==='GET')return service.scene(url.searchParams.get('sessionKey'));
    if(route==='/api/skills'&&method==='GET')return service.skillRecommendations(url.searchParams.get('sessionKey'));
    if(route==='/api/installation'&&method==='GET')return visibleInstallation(store,service.resolveSession(url.searchParams.get('sessionKey')));
    if(route==='/api/memory'&&method==='GET')return service.memoryStatus(url.searchParams.get('sessionKey'));

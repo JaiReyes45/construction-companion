@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {fail} from './contracts.mjs';
 const statuses={INVALID:400,UNAUTHORIZED:401,FORBIDDEN:403,NOT_FOUND:404,CONFLICT:409,EXPIRED:410,UNSUPPORTED:422,LIMIT:413,MEMORY_DISABLED:403};
-const publicRoot=fileURLToPath(new URL('../public/',import.meta.url));
+const publicRoot=path.resolve(fileURLToPath(new URL('../public/',import.meta.url)));
 function authorized(header,token){const a=Buffer.from(header??''),b=Buffer.from('Bearer '+token);return a.length===b.length&&timingSafeEqual(a,b);}
 async function body(req){let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>65536)fail('LIMIT','Request exceeds 64 KiB');chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString());}catch{fail('INVALID','Invalid JSON');}}
 export async function startServer({service,tokens,port=0}){

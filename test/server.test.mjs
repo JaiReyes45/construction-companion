@@ -42,3 +42,8 @@ test('browser answers derive origin on server and reject forged/stale replies',a
  assert.equal((await send(data)).status,200);assert.equal((await pending).status,'answered');
  assert.equal((await send(data)).status,409);
 });
+test('public modules are served with CSP and no traversal outside public',async t=>{
+ const f=await fixture(t);
+ const r=await fetch(f.origin+'/projection.mjs');assert.equal(r.status,200);assert.ok(r.headers.get('content-security-policy').includes("script-src 'self'"));
+ assert.equal((await fetch(f.origin+'/%2e%2e/package.json')).status,404);
+});
